@@ -1,0 +1,27 @@
+{
+  "name": "earthstar-graphql",
+  "license": "UNLICENSED",
+  "version": "0.1.0",
+  "dependencies": {
+    "earthstar": "^3.0.0",
+    "nexus": "0.25.0"
+  },
+  "author": {
+    "name": "Sam Gwilym",
+    "email": "gwilym@me.com"
+  },
+  "scripts": {
+    "format": "npx prettier --write './**/*.{ts,md}'",
+    "dev": "nexus dev",
+    "build": "nexus build",
+    "start": "node .nexus/build/api"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "devDependencies": {
+    "prettier": "^2.0.5"
+  }
+}
