@@ -4,7 +4,7 @@ A GraphQL server which is able to query, sync and set data to earthstar workspac
 
 ## Running
 
-Clone the repo, install deps, and run `yarn dev`. This will spin up a local instance of the GraphQL server with a playground that you can access from localhost:4000.
+Clone the repo, create a `workspaces` dir in the root, install deps, and run `yarn dev`. This will spin up a local instance of the GraphQL server with a playground that you can access from localhost:4000.
 
 When the server starts up, it looks for sqlite files in the `workspaces` directory to initialise its own store of workspaces with. It will automatically create sqlite files here when you sync new workspaces with pubs
 
