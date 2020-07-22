@@ -1,22 +1,82 @@
 # earthstar-graphql
 
-A GraphQL server which is able to query, sync and set data to earthstar workspaces. **This is _so_ a work in progress!!!**
+Query, sync and set data to [earthstar](https://github.com/cinnamon-bun/earthstar) workspaces using GraphQL.
 
-## Running
+Which possibilities does a GraphQL API open up?
 
-Clone the repo, create a `workspaces` dir in the root, install deps, and run `yarn dev`. This will spin up a local instance of the GraphQL server with a playground that you can access from localhost:4000.
+- Easily traverse related data in a single query
+- Build earthstar clients in other languages than JavaScript
+- Simplify client development with GraphQL clients that handle data caching for you
 
-When the server starts up, it looks for sqlite files in the `workspaces` directory to initialise its own store of workspaces with. It will automatically create sqlite files here when you sync new workspaces with pubs
+Use this package to spin up endpoints, build your own servers, or even embed the schema inside your client and query via a function. Or spin up a playground that you can use to learn more about earthstar via the generated documentation.
 
-The schema is thoroughly documented, so check out the docs in the playground!
+## Starting the GraphQL playground
 
-## To improve
+To read the generated documentation to learn what kind of queries you can make, you can start up a graphql playground.
 
-- I'd like the response of the `syncWithPub` mutation in particular to be richer, but I think this may require changes from the earthstar package, which currently only surfaces errors like a pub 404 as log messages.
-- The `setDataToWorkspace` mutation response could also be richer.
+1. Clone this repo
+2. Install dependencies with `yarn`
+3. Run `yarn server`
+4. Navigate to localhost:4000 in your browser
 
-## To figure out...
+## Usage
 
-- Currently workspaces are all SqliteStorage instances. Should there be an option to have this server to run with memory storage instances?
-- Is there a SQLite of graph databases out there that we could use to solve some of the typing edge cases and performance issues this would undoubtedly have with larger workspaces?
-- How is this thing distributed? How would we be able to embed this locally into a client? Could it be a kind of queriable pub?
+### Installation
+
+From within your project:
+
+```
+yarn add earthstar-graphql
+```
+
+### Intro
+
+Thanks to earthstar being able to run offline and in-browser, there are many ways to build apps using earthstar-graphql. You can run a server on node, where you can persist data using SQLite and query over HTTP. Or you can embed the schema directly within a client, which makes querying as straightforward as a function call!
+
+Whichever method you use, the GraphQL server needs on a _context_. This is where data like the workspaces and the storage method (i.e. SQLite or in-memory) is kept.
+
+You will need to build a context first, and then provide it to either your server or the `query` function. Both support SQLite and in-memory storage.
+
+### API
+
+#### `makeMemoryContext`
+
+```ts
+function makeMemoryContext(addresses: string[]): Context;
+```
+
+Creates a GraphQL context which stores workspace data in-memory.
+
+#### `makeSqliteContext`
+
+```ts
+function makeSqliteContext(
+  workspaces: { address: string; path: string }[]
+): Context;
+```
+
+Creates a GraphQL context which persist workspace data in SQLite files at their respective path(s).
+
+#### `query`
+
+```ts
+function query(
+  queryString: string,
+  variables: Record<string, any>,
+  ctx: Context
+): Promise<ExecutionResult>;
+```
+
+Returns a GraphQL response promise for a given query, variables, and context. If you want to embed the GraphQL API within your client, this is the way to do it.
+
+#### `makeServer`
+
+```ts
+function makeServer(context: Context): Apolloserver;
+```
+
+Returns an Apollo GraphQL server for a given context.
+
+#### `schema`
+
+The GraphQLSchema definition If you want to do something more complicated (e.g. build your own GraphQL server).

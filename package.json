@@ -1,27 +1,40 @@
 {
   "name": "earthstar-graphql",
-  "license": "UNLICENSED",
-  "version": "0.1.0",
+  "license": "AGPL-3.0",
+  "version": "1.0.0",
   "dependencies": {
-    "earthstar": "^3.0.0",
-    "nexus": "0.25.0"
+    "@nexus/schema": "0.14.0",
+    "apollo-server": "2.16.0",
+    "earthstar": "3.1.1",
+    "graphql": "15.3.0",
+    "graphql-type-json": "0.3.2",
+    "js-base64": "3.2.4"
   },
-  "author": {
-    "name": "Sam Gwilym",
-    "email": "gwilym@me.com"
-  },
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist/earthstar-graphql.esm.js",
+  "files": [
+    "dist"
+  ],
+  "author": "Sam Gwilym",
   "scripts": {
-    "format": "npx prettier --write './**/*.{ts,md}'",
-    "dev": "nexus dev",
-    "build": "nexus build",
-    "start": "node .nexus/build/api"
-  },
-  "prettier": {
-    "semi": false,
-    "singleQuote": true,
-    "trailingComma": "all"
+    "dev": "ts-node-dev --no-notify --respawn --transpile-only  -P nexus.tsconfig.json ./src/schema.ts --ignore=built",
+    "test": "jest",
+    "build": "tsdx build",
+    "prepare": "tsdx build",
+    "server": "ts-node --transpile-only -P nexus.tsconfig.json ./src/scripts/start-server.ts --ignore=built"
   },
   "devDependencies": {
-    "prettier": "^2.0.5"
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
+    "@types/jest": "^26.0.5",
+    "@types/js-base64": "^3.0.0",
+    "@types/node": "^14.0.24",
+    "jest": "^26.1.0",
+    "prettier": "^2.0.5",
+    "ts-node": "^8.10.2",
+    "ts-node-dev": "^1.0.0-pre.52",
+    "tsdx": "^0.13.2",
+    "typescript": "^3.9.7"
   }
 }
