@@ -42,20 +42,20 @@ You will need to build a context first, and then provide it to either your serve
 #### `makeMemoryContext`
 
 ```ts
-function makeMemoryContext(addresses: string[]): Context;
+function makeMemoryContext(workspaceAddresses: string[]): Context;
 ```
 
-Creates a GraphQL context which stores workspace data in-memory.
+Creates a GraphQL context which stores data from multiple workspaces in-memory.
 
 #### `makeSqliteContext`
 
 ```ts
 function makeSqliteContext(
-  workspaces: { address: string; path: string }[]
+  workspaces: { workspaceAddress: string; path: string }[]
 ): Context;
 ```
 
-Creates a GraphQL context which persist workspace data in SQLite files at their respective path(s).
+Creates a GraphQL context which persists data for multiple workspaces in SQLite files at their respective path(s).
 
 #### `query`
 
