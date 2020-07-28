@@ -37,6 +37,8 @@ Whichever method you use, the GraphQL server needs on a _context_. This is where
 
 You will need to build a context first, and then provide it to either your server or the `query` function. Both support SQLite and in-memory storage.
 
+Both adding new data to a workspace and syncing a workspace with a pub are triggered via the GraphQL API, with the `set` and `sync` mutations.
+
 ### API
 
 #### `makeMemoryContext`
