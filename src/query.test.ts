@@ -30,7 +30,7 @@ describe("query", () => {
     };
 
     const TEST_MUTATION = `mutation TestMutation($author: AuthorInput!, $document: DocumentInput!, $workspace: String!) {
-          setDataToWorkspace(
+          set(
               author: $author,
               document: $document,
               workspace: $workspace

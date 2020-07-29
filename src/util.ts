@@ -6,7 +6,7 @@ import {
   AuthorSortOrder,
   WorkspaceSortOrder,
   StorageType,
-} from "./typeDefs";
+} from "./types";
 import { VALIDATORS, IS_NODE } from "./context";
 
 const workspaceDocPathRegex = /(\+.*\..[^\/]*)(.*)/;

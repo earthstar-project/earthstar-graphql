@@ -1,7 +1,8 @@
 import { GraphQLJSONObject } from "graphql-type-json";
-import { scalarType } from "@nexus/schema";
 
-export const JSONScalar = scalarType({
+import { GraphQLScalarType } from "graphql";
+
+export const jsonScalarType = new GraphQLScalarType({
   name: "JSON",
   serialize: GraphQLJSONObject.serialize,
   parseValue: GraphQLJSONObject.parseValue,

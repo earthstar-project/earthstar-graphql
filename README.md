@@ -8,7 +8,7 @@ Which possibilities does a GraphQL API open up?
 - Build earthstar clients in other languages than JavaScript
 - Simplify client development with GraphQL clients that handle data caching for you
 
-Use this package to spin up endpoints, build your own servers, or even embed the schema inside your client and query via a function. Or spin up a playground that you can use to learn more about earthstar via the generated documentation.
+Use this package to query a schema, build servers, or spin up a playground that you can use to learn more about earthstar via the generated documentation.
 
 ## Starting the GraphQL playground
 
@@ -31,11 +31,14 @@ yarn add earthstar-graphql
 
 ### Intro
 
-Thanks to earthstar being able to run offline and in-browser, there are many ways to build apps using earthstar-graphql. You can run a server on node, where you can persist data using SQLite and query over HTTP. Or you can embed the schema directly within a client, which makes querying as straightforward as a function call!
+Thanks to earthstar being able to run offline and in-browser, there are many ways to build apps using earthstar-graphql.
 
-Whichever method you use, the GraphQL server needs on a _context_. This is where data like the workspaces and the storage method (i.e. SQLite or in-memory) is kept.
+Usually GraphQL APIs are deployed as servers that can be queried over HTTP, but earthstar makes it possible to embed and query the schema from within the client, no HTTP requests needed!
+Even then, it's still possible to build traditional GraphQL endpoints using this package.
 
-You will need to build a context first, and then provide it to either your server or the `query` function. Both support SQLite and in-memory storage.
+However you decide to query the schema, you need a _context_. This is where data like the workspaces and the storage method (i.e. SQLite or in-memory) is kept.
+
+You will need to build a context first, which you can provide to the `query` function or whatever GraphQL solution you're using.
 
 Both adding new data to a workspace and syncing a workspace with a pub are triggered via the GraphQL API, with the `set` and `sync` mutations.
 
@@ -69,16 +72,20 @@ function query(
 ): Promise<ExecutionResult>;
 ```
 
-Returns a GraphQL response promise for a given query, variables, and context. If you want to embed the GraphQL API within your client, this is the way to do it.
-
-#### `makeServer`
-
-```ts
-function makeServer(context: Context): Apolloserver;
-```
-
-Returns an Apollo GraphQL server for a given context.
+An asynchronous function which returns a GraphQL response promise for a given query, variables, and context.
 
 #### `schema`
 
-The GraphQLSchema definition If you want to do something more complicated (e.g. build your own GraphQL server).
+The GraphQLSchema which you can use to create things like HTTP servers:
+
+```js
+import { makeMemoryContext, schema } from "earthstar-graphql";
+import { ApolloServer } from "apollo-server";
+
+const context = makeMemoryContext(["+bees.777"]);
+const server = new ApolloServer({ schema, context });
+
+server.listen().then(({ url }) => {
+  console.log(`🍄 earthstar-graphql ready at ${url}`);
+});
+```

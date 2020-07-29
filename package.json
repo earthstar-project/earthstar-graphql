@@ -1,10 +1,8 @@
 {
   "name": "earthstar-graphql",
   "license": "AGPL-3.0",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "dependencies": {
-    "@nexus/schema": "0.14.0",
-    "apollo-server": "2.16.0",
     "earthstar": "3.1.1",
     "graphql": "15.3.0",
     "graphql-type-json": "0.3.2",
@@ -18,13 +16,13 @@
   ],
   "author": "Sam Gwilym",
   "scripts": {
-    "dev": "ts-node-dev --no-notify --respawn --transpile-only  -P nexus.tsconfig.json ./src/schema.ts --ignore=built",
     "test": "jest",
     "build": "tsdx build",
     "prepare": "tsdx build",
-    "server": "ts-node --transpile-only -P nexus.tsconfig.json ./src/scripts/start-server.ts --ignore=built"
+    "server": "ts-node --transpile-only -P server.tsconfig.json ./src/scripts/start-server.ts --ignore=built"
   },
   "devDependencies": {
+    "apollo-server": "2.16.0",
     "@babel/preset-env": "^7.10.4",
     "@babel/preset-typescript": "^7.10.4",
     "@types/jest": "^26.0.5",

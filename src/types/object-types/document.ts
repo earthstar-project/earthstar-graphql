@@ -1,112 +1,135 @@
 import { getDocumentWorkspace } from "../../util";
-import { enumType, objectType, unionType } from "@nexus/schema";
-import { ES3Document as TES3Document } from "../../typeDefs";
+import { ES3Document, Context } from "../../types";
+import {
+  GraphQLEnumType,
+  GraphQLObjectType,
+  GraphQLUnionType,
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLFloat,
+  GraphQLID,
+} from "graphql";
+import { nodeInterface, encodeToId } from "../interfaces/node";
+import { authorType } from "./author";
+import { workspaceType } from "./workspace";
+import { jsonScalarType } from "../scalars/json";
 
-export const DocumentFormat = enumType({
+export const documentFormatEnum = new GraphQLEnumType({
   name: "DocumentFormat",
-  members: [
-    {
-      name: "ES3",
+  values: {
+    ES3: {
       value: "es.3",
       description: "The third earthstar format!",
     },
-  ],
+  },
 });
 
-export const DocumentSortOrder = enumType({
+export const documentSortEnum = new GraphQLEnumType({
   name: "DocumentSortOrder",
-  rootTyping: "t.DocumentSortOrder",
-  members: [
-    {
-      name: "NEWEST",
+  description: "A value describing how a list of documents will be ordered",
+  values: {
+    NEWEST: {
       description: "Order documents by those updated most recently",
     },
-    {
-      name: "OLDEST",
+    OLDEST: {
       description: "Order documents by those updated least recently",
     },
-  ],
-  description:
-    "The order in which to look up the documents. The default is NEWEST",
+  },
 });
 
-export const UnknownFormatDocument = objectType({
+export const unknownFormatDocumentObject = new GraphQLObjectType({
   name: "UnknownFormatDocument",
   description:
     "Returned when the format of the document is not recognised by any of the validators used by this GraphQL server",
-  definition(t) {
-    t.field("data", {
-      type: "JSON",
+  fields: () => ({
+    data: {
+      type: jsonScalarType,
       resolve(root) {
         return root;
       },
-    });
-  },
+    },
+  }),
 });
 
-export const Document = unionType({
-  name: "Document",
-  description: "A document published by authors to a workspace",
-  definition(t) {
-    t.members("ES3Document", "UnknownFormatDocument");
-    t.resolveType((item) => {
-      switch ((item as TES3Document).format) {
-        case "es.3":
-          return "ES3Document";
-        default:
-          return "UnknownFormatDocument";
-      }
-    });
-  },
-});
-
-export const ES3Document = objectType({
+export const es3DocumentType: GraphQLObjectType = new GraphQLObjectType<
+  ES3Document,
+  Context
+>({
   name: "ES3Document",
   description: "A document following the ES3 validation format",
-  rootTyping: "t.ES3Document",
-  definition(t) {
-    t.implements("Node");
-    t.string("value", {
+  fields: () => ({
+    id: {
+      type: GraphQLNonNull(GraphQLID),
+      resolve(root) {
+        return encodeToId("ES3Document", `${root.workspace}${root.path}`);
+      },
+    },
+    value: {
+      type: GraphQLNonNull(GraphQLString),
       description: "The current value of this document",
-      nullable: false,
-    });
-    t.float("timestamp", {
+      resolve(root) {
+        return root.value;
+      },
+    },
+    timestamp: {
+      type: GraphQLNonNull(GraphQLFloat),
       description:
         "The number of microseconds since the UNIX era began that this document was published",
-    });
-    t.string("signature", {
+      resolve(root) {
+        return root.timestamp;
+      },
+    },
+    signature: {
+      type: GraphQLNonNull(GraphQLString),
       description:
         "The signature of this document that verifies its authenticity",
-      nullable: false,
-    });
-    t.string("path", {
+      resolve(root) {
+        return root.signature;
+      },
+    },
+    path: {
+      type: GraphQLNonNull(GraphQLString),
       description:
         "A string identifying this document like a path in a filesystem, e.g. /wiki/bees",
-      nullable: false,
-    }),
-      t.string("workspacePath", {
-        description:
-          "A string identifying this document like a path in a filesystem, prefixed with the workspace e.g. +gardening.123456/wiki/bees",
-        nullable: false,
-        resolve(root) {
-          return `${root.workspace}${root.path}`;
-        },
-      });
-    t.field("author", {
-      type: "Author",
+      resolve(root) {
+        return root.path;
+      },
+    },
+    workspacePath: {
+      type: GraphQLNonNull(GraphQLString),
+      description:
+        "A string identifying this document like a path in a filesystem, prefixed with the workspace e.g. +gardening.123456/wiki/bees",
+      resolve(root) {
+        return `${root.workspace}${root.path}`;
+      },
+    },
+    author: {
+      type: GraphQLNonNull(authorType),
       description: "The last author who published to this path",
-      nullable: false,
       resolve(root) {
         return { address: root.author, fromWorkspace: root.workspace };
       },
-    });
-    t.field("workspace", {
-      type: "Workspace",
+    },
+    workspace: {
+      type: GraphQLNonNull(workspaceType),
       description: "The workspace this document belongs to",
-      nullable: false,
       resolve(root, _args, ctx) {
         return getDocumentWorkspace(root, ctx);
       },
-    });
+    },
+  }),
+  interfaces: [nodeInterface],
+});
+
+export const documentUnionType = new GraphQLUnionType({
+  name: "Document",
+  description: "A document published by authors to a workspace",
+  types: [es3DocumentType, unknownFormatDocumentObject],
+  resolveType(item) {
+    if (item.format === "es.3") {
+      return es3DocumentType;
+    }
+
+    return unknownFormatDocumentObject;
   },
 });

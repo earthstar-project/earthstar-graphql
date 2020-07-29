@@ -1,7 +1,10 @@
-import { interfaceType } from "@nexus/schema";
+import { GraphQLInterfaceType, GraphQLNonNull, GraphQLID } from "graphql";
 import { encode, decode } from "js-base64";
 import { Document } from "earthstar";
-import { ESAuthor, ESWorkspace } from "../../typeDefs";
+import { ESAuthor, ESWorkspace } from "../../types";
+import { authorType } from "../object-types/author";
+import { es3DocumentType } from "../object-types/document";
+import { workspaceType } from "../object-types/workspace";
 
 export function encodeToId(typename: string, localId: string): string {
   return encode(`${typename}~${localId}`);
@@ -45,33 +48,25 @@ function nodeIsWorkspace(node: ImplementsNode): node is ESWorkspace {
   return false;
 }
 
-export const NodeInterface = interfaceType({
+export const nodeInterface = new GraphQLInterfaceType({
   name: "Node",
   description: "An object with an ID",
-  definition(t) {
-    t.id("id", {
+  fields: {
+    id: {
+      type: GraphQLNonNull(GraphQLID),
       description:
         "An opaque, globally unique identifier, useful for GraphQL clients which use this to automatically manage their client-side caches",
-      resolve(node) {
-        if (nodeIsAuthor(node)) {
-          return encodeToId("Author", node.address);
-        } else if (nodeIsDocument(node)) {
-          return encodeToId("ES3Document", `${node.workspace}${node.path}`);
-        }
+    },
+  },
+  resolveType(node) {
+    if (nodeIsAuthor(node)) {
+      return "Author";
+    } else if (nodeIsDocument(node)) {
+      return "ES3Document";
+    } else if (nodeIsWorkspace(node)) {
+      return "Workspace";
+    }
 
-        return encodeToId("Workspace", node.workspace);
-      },
-    });
-    t.resolveType((node) => {
-      if (nodeIsAuthor(node)) {
-        return "Author";
-      } else if (nodeIsDocument(node)) {
-        return "ES3Document";
-      } else if (nodeIsWorkspace(node)) {
-        return "Workspace";
-      }
-
-      return null;
-    });
+    return null;
   },
 });

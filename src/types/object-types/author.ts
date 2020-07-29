@@ -5,82 +5,101 @@ import {
   sortDocuments,
   sortWorkspaces,
 } from "../../util";
-import { enumType, objectType, arg } from "@nexus/schema";
+import {
+  GraphQLEnumType,
+  GraphQLObjectType,
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLList,
+  GraphQLID,
+} from "graphql";
+import { nodeInterface, encodeToId } from "../interfaces/node";
+import { ESAuthor, Context } from "../../types";
+import { documentUnionType, documentSortEnum } from "./document";
+import { workspaceSortEnum, workspaceType } from "./workspace";
 
-export const AuthorSortOrder = enumType({
+export const authorSortEnum = new GraphQLEnumType({
   name: "AuthorSortOrder",
-  rootTyping: "t.AuthorSortOrder",
-  members: [
-    { name: "NAME_ASC", description: "Order authors by name, ascending" },
-    { name: "NAME_DESC", description: "Order authors by name, descending" },
-    {
-      name: "LAST_PUBLISHED_ASC",
+  description: "A value describing how a list of authors will be ordered",
+  values: {
+    NAME_ASC: {
+      description: "Order authors by name, ascending",
+    },
+    NAME_DESC: {
+      description: "Order authors by name, descending",
+    },
+    LAST_PUBLISHED_ASC: {
       description:
         "Order authors by their last known published document, least recent first",
     },
-    {
-      name: "LAST_PUBLISHED_DESC",
+    LAST_PUBLISHED_DESC: {
       description:
         "Order authors by their last known published document, most recent first",
     },
-  ],
-  description:
-    "The order in which to look up the authors. The default is LAST_PUBLISHED_DESC",
+  },
 });
 
-export const Author = objectType({
+export const authorType: GraphQLObjectType = new GraphQLObjectType<
+  ESAuthor,
+  Context
+>({
   name: "Author",
   description: "A person identified by a public key",
-  rootTyping: "t.ESAuthor",
-  definition(t) {
-    t.implements("Node");
-    t.string("shortName", {
+  fields: () => ({
+    id: {
+      type: GraphQLNonNull(GraphQLID),
+      resolve(root) {
+        return encodeToId("Author", root.address);
+      },
+    },
+    shortName: {
+      type: GraphQLNonNull(GraphQLString),
       description:
-        "The author's short name, without their public key, e.g. suzy",
-      nullable: false,
+        "The author's short name without their public key, e.g. suzy",
       resolve(root) {
         return getAuthorShortname(root.address);
       },
-    });
-    t.string("address", {
+    },
+    address: {
+      type: GraphQLNonNull(GraphQLString),
       description:
         "The author's full address, made of short name and public key, e.g. @suzy.6efJ8v8rtwoBxfN5MKeTF2Qqyf6zBmwmv8oAbendBZHP",
-      nullable: false,
       resolve(root) {
         return root.address;
       },
-    });
-    t.list.field("documents", {
+    },
+    documents: {
+      type: GraphQLNonNull(GraphQLList(GraphQLNonNull(documentUnionType))),
       description:
         "Return a list of documents from this author. If the author is queried within the context of a workspace, only their documents from that workspace will be returned",
-      nullable: false,
-      type: "Document",
       args: {
-        sortedBy: arg({
-          type: "DocumentSortOrder",
-          required: false,
-        }),
+        sortedBy: {
+          type: documentSortEnum,
+          description:
+            "The order to return the documents in, defaults to OLDEST",
+        },
       },
       resolve(root, args, ctx) {
         return sortDocuments(getAuthorDocuments(root, ctx), args.sortedBy);
       },
-    });
-    t.list.field("workspaces", {
-      type: "Workspace",
+    },
+    workspaces: {
+      type: GraphQLNonNull(GraphQLList(GraphQLNonNull(workspaceType))),
       description:
         "Return a list of workspaces this author has published documents to",
-      nullable: false,
       args: {
-        sortedBy: arg({
-          type: "WorkspaceSortOrder",
-          required: false,
-        }),
+        sortedBy: {
+          type: workspaceSortEnum,
+          description:
+            "The order to return the workspaces in, defaults to LAST_ACTIVITY_DESC",
+        },
       },
       resolve(root, args, ctx) {
         const workspaces = getAuthorWorkspaces(root.address, ctx);
 
         return sortWorkspaces(workspaces, args.sortedBy);
       },
-    });
-  },
+    },
+  }),
+  interfaces: [nodeInterface],
 });

@@ -1,5 +1,5 @@
 import { ValidatorEs3, StorageSqlite, StorageMemory } from "earthstar";
-import { Context } from "./typeDefs";
+import { Context } from "./types";
 
 export const IS_NODE = typeof process === "object";
 
@@ -12,10 +12,10 @@ export function makeMemoryContext(addresses: string[]): Context {
   };
 }
 
-export function makeSqliteContext(
+export async function makeSqliteContext(
   workspaces: { address: string; path: string }[]
-): Context {
-  const nodePath = require("path");
+): Promise<Context> {
+  const nodePath = await import("path");
 
   return {
     storageMode: "SQLITE",
