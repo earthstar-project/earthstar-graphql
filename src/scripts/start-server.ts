@@ -23,20 +23,22 @@ const workspaces =
       const result = sqliteRegex.exec(fileName);
 
       if (result) {
-        return { address: result[1], path: `./workspaces/${fileName}` };
+        return result[1];
       }
 
       return undefined;
     })
     .filter(isDefined) || [];
 
-makeSqliteContext(workspaces).then((context) => {
-  const server = new ApolloServer({ schema, context });
-  server
-    .listen({
-      port: 4000,
-    })
-    .then(({ url }) => {
-      console.log(`🍄 earthstar-graphql ready at ${url}`);
-    });
-});
+makeSqliteContext(workspaces, (addr) => `./workspaces/${addr}.sqlite`).then(
+  (context) => {
+    const server = new ApolloServer({ schema, context });
+    server
+      .listen({
+        port: 4000,
+      })
+      .then(({ url }) => {
+        console.log(`🍄 earthstar-graphql ready at ${url}`);
+      });
+  }
+);

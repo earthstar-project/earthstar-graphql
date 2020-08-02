@@ -7,15 +7,16 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLInputObjectType,
+  GraphQLScalarType,
 } from "graphql";
 import { workspaceType } from "./object-types/workspace";
 import { documentUnionType, documentFormatEnum } from "./object-types/document";
 import { GraphQLJSONObject } from "graphql-type-json";
+import { WSAEACCES } from "constants";
 
-export const syncResultType = new GraphQLObjectType({
-  name: "SyncResult",
-  description:
-    "The result of a sync operation. Currently not very descriptive, need to figure out how to get richer result data from this operation...",
+export const syncSuccessType = new GraphQLObjectType({
+  name: "SyncSuccess",
+  description: "The result of a successful sync operation.",
   fields: {
     syncedWorkspace: {
       type: workspaceType,
@@ -65,6 +66,58 @@ export const setResultType = new GraphQLUnionType({
     documentRejectedErrorObject,
     workspaceNotFoundErrorObject,
   ],
+  resolveType(item) {
+    return item.__type;
+  },
+});
+
+export const syncResultUnion = new GraphQLUnionType({
+  name: "SyncResult",
+  description: "The result of an attempted sync operation.",
+  types: [syncSuccessType, workspaceNotFoundErrorObject],
+  resolveType(item) {
+    return item.__type;
+  },
+});
+
+export const workspaceAddedResultType = new GraphQLObjectType({
+  name: "WorkspaceAddedResult",
+  description: "Describes a successful addition of a workspace",
+  fields: {
+    workspace: {
+      type: GraphQLNonNull(workspaceType),
+      description: "The newly added workspace",
+    },
+  },
+});
+
+export const notPermittedResult = new GraphQLObjectType({
+  name: "NotPermittedResult",
+  description: "Returned when an attempted operation was not permitted",
+  fields: {
+    reason: {
+      type: GraphQLString,
+      description:
+        "The reason for not being given permission to perform the action.",
+    },
+  },
+});
+
+export const workspaceExistsResult = new GraphQLObjectType({
+  name: "WorkspaceExistsResult",
+  description: "Describes a pre-existing workspace",
+  fields: {
+    workspace: {
+      type: GraphQLNonNull(workspaceType),
+      description: "The existing workspace",
+    },
+  },
+});
+
+export const addWorkspaceResultUnion = new GraphQLUnionType({
+  name: "AddWorkspaceResult",
+  description: "A possible result for adding a workspace",
+  types: [workspaceAddedResultType, notPermittedResult, workspaceExistsResult],
   resolveType(item) {
     return item.__type;
   },
@@ -160,7 +213,7 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
       },
     },
     sync: {
-      type: syncResultType,
+      type: syncResultUnion,
       description:
         "Sync one of the GraphQL server's locally stored workspaces with a pub's",
       args: {
@@ -175,23 +228,63 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
         },
       },
       async resolve(_root, args, ctx) {
-        // look for workspace, create if not already present
-
-        const existingStorage = ctx.workspaces.find(
+        const maybeStorage = ctx.workspaces.find(
           (wsStorage) => wsStorage.workspace === args.workspace
         );
 
-        const storage = existingStorage
-          ? existingStorage
-          : await initWorkspace(args.workspace, ctx.storageMode);
-
-        await syncLocalAndHttp(storage, args.pubUrl);
-
-        if (existingStorage === undefined) {
-          ctx.workspaces.push(storage);
+        if (maybeStorage === undefined) {
+          return {
+            __type: workspaceNotFoundErrorObject,
+            address: args.workspace,
+          };
         }
 
-        return { syncedWorkspace: storage };
+        await syncLocalAndHttp(maybeStorage, args.pubUrl);
+
+        return { __type: syncSuccessType, syncedWorkspace: maybeStorage };
+      },
+    },
+    addWorkspace: {
+      type: addWorkspaceResultUnion,
+      description: "Attempt to add a new workspace to the current context",
+      args: {
+        workspaceAddress: {
+          type: GraphQLNonNull(GraphQLString),
+          description: "The address of the workspace to add",
+        },
+        author: {
+          type: authorInputType,
+          description:
+            "The author wishing to add the workspace, possibly used to authorise this operation depending on the configuration",
+        },
+      },
+      async resolve(_root, args, ctx) {
+        const maybeExistingWorkspace = ctx.workspaces.find(
+          (ws) => ws.workspace === args.workspaceAddress
+        );
+
+        if (maybeExistingWorkspace) {
+          return {
+            __type: workspaceExistsResult,
+            workspace: maybeExistingWorkspace,
+          };
+        }
+
+        if (ctx.canAddWorkspace(args.workspaceAddress, args.author) === false) {
+          return {
+            __type: notPermittedResult,
+            reason: null,
+          };
+        }
+
+        const newStorage = await initWorkspace(args.workspaceAddress, ctx);
+
+        ctx.workspaces.push(newStorage);
+
+        return {
+          __type: workspaceAddedResultType,
+          workspace: newStorage,
+        };
       },
     },
   }),

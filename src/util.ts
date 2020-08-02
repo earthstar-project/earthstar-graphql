@@ -38,24 +38,22 @@ export async function getDocumentWorkspace(
   });
 
   if (!workspace) {
-    return await initWorkspace(doc.workspace, ctx.storageMode);
+    return await initWorkspace(doc.workspace, ctx);
   }
 
   return workspace;
 }
 
-export async function initWorkspace(address: string, mode: StorageType) {
-  switch (mode) {
+export async function initWorkspace(address: string, ctx: Context) {
+  switch (ctx.storageMode) {
     case "SQLITE":
-      if (IS_NODE) {
-        const path = await import("path");
-        return new StorageSqlite({
-          mode: "create-or-open",
-          validators: VALIDATORS,
-          filename: path.resolve(`./workspaces/${address}.sqlite`),
-          workspace: address,
-        });
-      }
+      const path = await import("path");
+      return new StorageSqlite({
+        mode: "create-or-open",
+        validators: VALIDATORS,
+        filename: path.resolve(ctx.getWorkspacePath(address)),
+        workspace: address,
+      });
     default:
       return new StorageMemory(VALIDATORS, address);
   }
