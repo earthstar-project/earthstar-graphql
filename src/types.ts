@@ -1,11 +1,34 @@
-import { IStorage, Document } from "earthstar";
+import {
+  IStorage,
+  Document,
+  AuthorKeypair,
+  StorageMemory,
+  StorageSqlite,
+} from "earthstar";
 
 export type StorageType = "MEMORY" | "SQLITE";
 
-export type Context = {
+export type AddWorkspaceCheck = (
+  workspaceAddress: string,
+  author?: AuthorKeypair
+) => boolean;
+
+export type ContextBase = {
   storageMode: StorageType;
   workspaces: IStorage[];
+  canAddWorkspace: AddWorkspaceCheck;
 };
+
+export interface MemoryContext extends ContextBase {
+  storageMode: "MEMORY";
+}
+
+export interface SqliteContext extends ContextBase {
+  storageMode: "SQLITE";
+  getWorkspacePath: (address: string) => string;
+}
+
+export type Context = MemoryContext | SqliteContext;
 
 export type WorkspaceSortOrder =
   | "NAME_ASC"

@@ -47,20 +47,25 @@ Both adding new data to a workspace and syncing a workspace with a pub are trigg
 #### `makeMemoryContext`
 
 ```ts
-function makeMemoryContext(workspaceAddresses: string[]): Context;
+function makeMemoryContext(
+  workspaceAddresses: string[],
+  canAddWorkspace?: (address: string, author?: AuthorKeypair) => boolean
+): MemoryContext;
 ```
 
-Creates a GraphQL context which stores data from multiple workspaces in-memory.
+Creates a GraphQL context which stores data from multiple workspaces in-memory. You can also pass an optional `canAddWorkspace` function that acts to authorise additions of new workspaces.
 
 #### `makeSqliteContext`
 
 ```ts
 function makeSqliteContext(
-  workspaces: { workspaceAddress: string; path: string }[]
-): Context;
+  workspaces: { workspaceAddress: string; path: string }[],
+  getWorkspacePath: (address: string) => string,
+  canAddWorkspace?: (address: string, author?: AuthorKeypair) => boolean
+): SQLiteContext;
 ```
 
-Creates a GraphQL context which persists data for multiple workspaces in SQLite files at their respective path(s).
+Creates a GraphQL context which persists data for multiple workspaces in SQLite databases. The paths for these workspaces are derived using the `getWorkspacePath` function arg. You can also pass an optional `canAddWorkspace` function that acts to authorise additions of new workspaces.
 
 #### `query`
 
