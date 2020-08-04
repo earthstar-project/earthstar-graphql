@@ -19,6 +19,7 @@
     "test": "jest",
     "build": "tsdx build",
     "prepare": "tsdx build",
+    "dev": "ts-node-dev --respawn --no-notify --transpile-only -P server.tsconfig.json ./src/scripts/start-server.ts --ignore=built",
     "server": "ts-node --transpile-only -P server.tsconfig.json ./src/scripts/start-server.ts --ignore=built"
   },
   "devDependencies": {
