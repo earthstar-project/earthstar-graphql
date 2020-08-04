@@ -2,9 +2,13 @@ import { IStorage, Document } from "earthstar";
 import fetch from "cross-fetch";
 import { ExecutionResult } from "graphql";
 
-export const SYNC_QUERY = `query SyncQuery($workspaceAddress: String!){
+export const SYNC_QUERY = `query SyncQuery(
+    $workspaceAddress: String!, 
+    $versionsByAuthor: String,
+    $pathPrefix: String
+) {
     workspace(address: $workspaceAddress) {
-      documents {
+      documents(versionsByAuthor: $versionsByAuthor, pathPrefix: $pathPrefix) {
         ... on ES3Document {
           value,
           timestamp,
@@ -40,9 +44,15 @@ type SyncQuery = {
   };
 };
 
+type SyncFilters = {
+  pathPrefix?: string;
+  versionsByAuthor?: string;
+};
+
 export default async function syncGraphql(
   storage: IStorage,
-  graphqlUrl: string
+  graphqlUrl: string,
+  filters: SyncFilters = {}
 ) {
   const res = await fetch(graphqlUrl, {
     method: "POST",
@@ -51,6 +61,7 @@ export default async function syncGraphql(
       query: SYNC_QUERY,
       variables: {
         workspaceAddress: storage.workspace,
+        ...filters,
       },
     }),
   });

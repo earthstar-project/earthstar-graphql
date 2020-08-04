@@ -37,6 +37,15 @@ const docs: Document[] = [
     timestamp: Date.now() * 1000 - 10000,
     signature: "",
   },
+  {
+    format: "es.3",
+    workspace: TEST_WORKSPACE_ADDR,
+    author: TEST_AUTHOR.address,
+    path: "/wiki/door",
+    value: "The third test document",
+    timestamp: Date.now() * 1000 - 20000,
+    signature: "",
+  },
 ];
 
 docs.forEach((doc) => {
