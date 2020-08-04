@@ -1,4 +1,4 @@
-name: Just
+name: Jest
 on: push
 jobs:
   build:
