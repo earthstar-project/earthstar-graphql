@@ -58,6 +58,12 @@ export const es3DocumentType: GraphQLObjectType = new GraphQLObjectType<
   name: "ES3Document",
   description: "A document following the ES3 validation format",
   fields: () => ({
+    format: {
+      type: GraphQLNonNull(GraphQLString),
+      resolve() {
+        return "es.3";
+      },
+    },
     id: {
       type: GraphQLNonNull(GraphQLID),
       resolve(root) {
