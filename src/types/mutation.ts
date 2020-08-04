@@ -7,12 +7,11 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLInputObjectType,
-  GraphQLScalarType,
+  GraphQLEnumType,
 } from "graphql";
 import { workspaceType } from "./object-types/workspace";
 import { documentUnionType, documentFormatEnum } from "./object-types/document";
-import { GraphQLJSONObject } from "graphql-type-json";
-import { WSAEACCES } from "constants";
+import syncGraphql from "../sync-graphql";
 
 export const syncSuccessType = new GraphQLObjectType({
   name: "SyncSuccess",
@@ -158,6 +157,18 @@ export const authorInputType = new GraphQLInputObjectType({
   },
 });
 
+export const syncFormatEnum = new GraphQLEnumType({
+  name: "SyncFormatEnum",
+  values: {
+    REST: {
+      description: "The sync format for REST API Earthstar pubs",
+    },
+    GRAPHQL: {
+      description: "The sync format for GraphQL Earthstar pubs",
+    },
+  },
+});
+
 export const mutationType = new GraphQLObjectType<{}, Context>({
   name: "Mutation",
   description: "The root mutation type",
@@ -226,6 +237,11 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
           type: GraphQLNonNull(GraphQLString),
           description: "The URL of the pub to sync with",
         },
+        format: {
+          type: syncFormatEnum,
+          defaultValue: "REST",
+          description: "The format for this sync operation to take",
+        },
       },
       async resolve(_root, args, ctx) {
         const maybeStorage = ctx.workspaces.find(
@@ -239,7 +255,11 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
           };
         }
 
-        await syncLocalAndHttp(maybeStorage, args.pubUrl);
+        if (args.format === "GRAPHQL") {
+          await syncGraphql(maybeStorage, args.pubUrl);
+        } else {
+          await syncLocalAndHttp(maybeStorage, args.pubUrl);
+        }
 
         return { __type: syncSuccessType, syncedWorkspace: maybeStorage };
       },
