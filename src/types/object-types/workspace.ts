@@ -128,9 +128,24 @@ export const workspaceType: GraphQLObjectType = new GraphQLObjectType<
         sortedBy: {
           type: documentSortEnum,
         },
+        pathPrefix: {
+          type: GraphQLString,
+          description:
+            "A path that all returned docs must have at the beginning of their paths",
+        },
+        versionsByAuthor: {
+          type: GraphQLString,
+          description: "An author address ",
+        },
       },
       resolve(root, args) {
-        return sortDocuments(root.documents(), args.sortedBy);
+        return sortDocuments(
+          root.documents({
+            pathPrefix: args.pathPrefix,
+            versionsByAuthor: args.versionsByAuthor,
+          }),
+          args.sortedBy
+        );
       },
     },
   }),

@@ -78,9 +78,17 @@ export const authorType: GraphQLObjectType = new GraphQLObjectType<
           description:
             "The order to return the documents in, defaults to OLDEST",
         },
+        pathPrefix: {
+          type: GraphQLString,
+          description:
+            "A path that all returned docs must have at the beginning of their paths",
+        },
       },
       resolve(root, args, ctx) {
-        return sortDocuments(getAuthorDocuments(root, ctx), args.sortedBy);
+        return sortDocuments(
+          getAuthorDocuments(root, ctx, { pathPrefix: args.pathPrefix }),
+          args.sortedBy
+        );
       },
     },
     workspaces: {

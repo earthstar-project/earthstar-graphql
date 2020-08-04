@@ -14,6 +14,7 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLList,
+  GraphQLScalarType,
 } from "graphql";
 import { Context } from "../types";
 import { authorType, authorSortEnum } from "./object-types/author";
@@ -93,9 +94,21 @@ export const queryType = new GraphQLObjectType<{}, Context>({
         sortedBy: {
           type: documentSortEnum,
         },
+        pathPrefix: {
+          type: GraphQLString,
+          description:
+            "A path that all returned docs must have at the beginning of their paths",
+        },
+        versionsByAuthor: {
+          type: GraphQLString,
+          description: "An author address ",
+        },
       },
       resolve(_root, args, ctx) {
-        const docs = getAllDocuments(ctx);
+        const docs = getAllDocuments(ctx, {
+          pathPrefix: args.pathPrefix,
+          versionsByAuthor: args.versionsByAuthor,
+        });
         return sortDocuments(docs, args.sortedBy);
       },
     },

@@ -59,9 +59,18 @@ export async function initWorkspace(address: string, ctx: Context) {
   }
 }
 
-export function getAllDocuments(ctx: Context) {
+export function getAllDocuments(
+  ctx: Context,
+  filters: {
+    pathPrefix?: string;
+    versionsByAuthor?: string;
+  } = {}
+) {
   return ctx.workspaces.flatMap((workspace) => {
-    return workspace.documents();
+    return workspace.documents({
+      pathPrefix: filters.pathPrefix,
+      versionsByAuthor: filters.versionsByAuthor,
+    });
   });
 }
 
@@ -109,7 +118,13 @@ export function getAllAuthors(ctx: Context) {
   ).map((address) => ({ address }));
 }
 
-export function getAuthorDocuments(author: ESAuthor, ctx: Context): Document[] {
+export function getAuthorDocuments(
+  author: ESAuthor,
+  ctx: Context,
+  filters: {
+    pathPrefix?: string;
+  } = {}
+): Document[] {
   const workspaces = author.fromWorkspace
     ? ctx.workspaces.filter((ws) => author.fromWorkspace === ws.workspace)
     : ctx.workspaces;
@@ -121,6 +136,7 @@ export function getAuthorDocuments(author: ESAuthor, ctx: Context): Document[] {
 
     return workspace.documents({
       versionsByAuthor: author.address,
+      pathPrefix: filters.pathPrefix,
     });
   });
 }
