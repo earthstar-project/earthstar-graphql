@@ -14,11 +14,13 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLList,
+  GraphQLScalarType,
 } from "graphql";
 import { Context } from "../types";
 import { authorType, authorSortEnum } from "./object-types/author";
 import { documentUnionType, documentSortEnum } from "./object-types/document";
 import { workspaceType, workspaceSortEnum } from "./object-types/workspace";
+import { syncFiltersObject } from "./object-types/sync-filters";
 
 export const queryType = new GraphQLObjectType<{}, Context>({
   name: "Query",
@@ -45,6 +47,12 @@ export const queryType = new GraphQLObjectType<{}, Context>({
           default:
             return null;
         }
+      },
+    },
+    syncFilters: {
+      type: syncFiltersObject,
+      resolve(_root, _args, ctx) {
+        return ctx.syncFilters;
       },
     },
     author: {
@@ -93,9 +101,22 @@ export const queryType = new GraphQLObjectType<{}, Context>({
         sortedBy: {
           type: documentSortEnum,
         },
+        pathPrefixes: {
+          type: GraphQLList(GraphQLNonNull(GraphQLString)),
+          description:
+            "Paths which all returned docs must have at the beginning of their paths",
+        },
+        versionsByAuthors: {
+          type: GraphQLList(GraphQLNonNull(GraphQLString)),
+          description:
+            "A list of author addresses of authors who have created versions of these documents",
+        },
       },
       resolve(_root, args, ctx) {
-        const docs = getAllDocuments(ctx);
+        const docs = getAllDocuments(ctx, {
+          pathPrefixes: args.pathPrefixes,
+          versionsByAuthors: args.versionsByAuthors,
+        });
         return sortDocuments(docs, args.sortedBy);
       },
     },

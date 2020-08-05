@@ -3,6 +3,7 @@
   "license": "AGPL-3.0",
   "version": "2.0.0",
   "dependencies": {
+    "cross-fetch": "^3.0.5",
     "earthstar": "3.1.1",
     "graphql": "15.3.0",
     "graphql-type-json": "0.3.2",
@@ -19,16 +20,18 @@
     "test": "jest",
     "build": "tsdx build",
     "prepare": "tsdx build",
+    "dev": "ts-node-dev --respawn --no-notify --transpile-only -P server.tsconfig.json ./src/scripts/start-server.ts --ignore=built",
     "server": "ts-node --transpile-only -P server.tsconfig.json ./src/scripts/start-server.ts --ignore=built"
   },
   "devDependencies": {
-    "apollo-server": "2.16.0",
     "@babel/preset-env": "^7.10.4",
     "@babel/preset-typescript": "^7.10.4",
     "@types/jest": "^26.0.5",
     "@types/js-base64": "^3.0.0",
     "@types/node": "^14.0.24",
+    "apollo-server": "2.16.0",
     "jest": "^26.1.0",
+    "msw": "^0.20.1",
     "prettier": "^2.0.5",
     "ts-node": "^8.10.2",
     "ts-node-dev": "^1.0.0-pre.52",

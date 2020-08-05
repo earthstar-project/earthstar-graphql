@@ -1,10 +1,12 @@
 import query from "./query";
-import { makeMemoryContext } from "./context";
+import createSchemaContext from "./create-schema-context";
 import { generateAuthorKeypair, sign, verify } from "earthstar";
 
 describe("query", () => {
   test("Successfully queries a new context", async () => {
-    var ctx = makeMemoryContext(["+testing.123"]);
+    const ctx = createSchemaContext("MEMORY", {
+      workspaceAddresses: ["+testing.123"],
+    });
 
     const TEST_QUERY = `query TestQuery {
           workspaces {
@@ -16,12 +18,16 @@ describe("query", () => {
     const result = await query(TEST_QUERY, {}, ctx);
 
     expect(result).toEqual({
-      data: { workspaces: [{ address: "+testing.123", name: "testing" }] },
+      data: {
+        workspaces: [{ address: "+testing.123", name: "testing" }],
+      },
     });
   });
 
   test("Can modify a context's data with a mutation query", async () => {
-    var ctx = makeMemoryContext(["+testing.123"]);
+    const ctx = createSchemaContext("MEMORY", {
+      workspaceAddresses: ["+testing.123"],
+    });
 
     const variables = {
       author: generateAuthorKeypair("test"),
@@ -29,7 +35,7 @@ describe("query", () => {
       workspace: "+testing.123",
     };
 
-    const TEST_MUTATION = `mutation TestMutation($author: AuthorInput!, $document: DocumentInput!, $workspace: String!) {
+    const TEST_MUTATION = `mutation TestMutation($author: AuthorInput!, $document: NewDocumentInput!, $workspace: String!) {
           set(
               author: $author,
               document: $document,
@@ -51,7 +57,9 @@ describe("query", () => {
   });
 
   test("Can add a workspace with a mutation query", async () => {
-    var ctx = makeMemoryContext(["+testing.123"]);
+    const ctx = createSchemaContext("MEMORY", {
+      workspaceAddresses: ["+testing.123"],
+    });
 
     const newAddress = "+newspace.123";
 
@@ -80,16 +88,19 @@ describe("query", () => {
     const permittedKeypair = generateAuthorKeypair("test");
     const message = sign(permittedKeypair, "canAddWorkspace");
 
-    const restrictedCtx = makeMemoryContext([], (address, keypair) => {
-      if (
-        address === "+allowed.999" &&
-        keypair &&
-        verify(keypair.address, message, "canAddWorkspace")
-      ) {
-        return true;
-      }
+    const restrictedCtx = createSchemaContext("MEMORY", {
+      workspaceAddresses: [],
+      canAddWorkspace: (address, keypair) => {
+        if (
+          address === "+allowed.999" &&
+          keypair &&
+          verify(keypair.address, message, "canAddWorkspace")
+        ) {
+          return true;
+        }
 
-      return false;
+        return false;
+      },
     });
 
     const badAuthorVars = {

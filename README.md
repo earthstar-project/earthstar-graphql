@@ -79,6 +79,24 @@ function query(
 
 An asynchronous function which returns a GraphQL response promise for a given query, variables, and context.
 
+```ts
+const QUERY = `{
+  workspaces {
+    address
+    documents {
+      ... on ES3Document {
+        value
+        author {
+          address
+        }
+      }
+    }
+  }  
+}`;
+
+const result = query(QUERY, {}, context);
+```
+
 #### `schema`
 
 The GraphQLSchema which you can use to create things like HTTP servers:
@@ -94,3 +112,18 @@ server.listen().then(({ url }) => {
   console.log(`🍄 earthstar-graphql ready at ${url}`);
 });
 ```
+
+#### `syncGraphql`
+
+```ts
+function syncGraphql(
+  storage: IStorage,
+  graphqlUrl: string,
+  filters: {
+    pathPrefix?: string;
+    versionsByAuthor?: string;
+  }
+): void;
+```
+
+A function you can use to sync documents from a remote GraphQL server to a local `IStorage` instance. It also takes filter options, so you can selectively sync documents. The `IStorage` is mutated in place.

@@ -13,10 +13,18 @@ export type AddWorkspaceCheck = (
   author?: AuthorKeypair
 ) => boolean;
 
+export type SyncFilters = {
+  pathPrefixes: string[];
+  versionsByAuthors: string[];
+};
+
+export type SyncFiltersArg = Partial<SyncFilters>;
+
 export type ContextBase = {
   storageMode: StorageType;
   workspaces: IStorage[];
   canAddWorkspace: AddWorkspaceCheck;
+  syncFilters: SyncFilters;
 };
 
 export interface MemoryContext extends ContextBase {
