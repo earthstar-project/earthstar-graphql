@@ -20,6 +20,7 @@ import { Context } from "../types";
 import { authorType, authorSortEnum } from "./object-types/author";
 import { documentUnionType, documentSortEnum } from "./object-types/document";
 import { workspaceType, workspaceSortEnum } from "./object-types/workspace";
+import { syncFiltersObject } from "./object-types/sync-filters";
 
 export const queryType = new GraphQLObjectType<{}, Context>({
   name: "Query",
@@ -46,6 +47,12 @@ export const queryType = new GraphQLObjectType<{}, Context>({
           default:
             return null;
         }
+      },
+    },
+    syncFilters: {
+      type: syncFiltersObject,
+      resolve(_root, _args, ctx) {
+        return ctx.syncFilters;
       },
     },
     author: {
