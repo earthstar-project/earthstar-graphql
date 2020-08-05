@@ -1,0 +1,392 @@
+"""The root query type"""
+type Query {
+  """Fetch an object using a GUID"""
+  node(id: String!): Node
+  syncFilters: SyncFilters
+
+  """
+  Look up an author by address, e.g. @suzy.6efJ8v8rtwoBxfN5MKeTF2Qqyf6zBmwmv8oAbendBZHP
+  """
+  author(address: String!): Author
+
+  """Return a list of all authors from all locally stored workspaces"""
+  authors(sortedBy: AuthorSortOrder): [Author!]!
+
+  """Look up a document using its path, e.g. +gardening.123/tomato"""
+  document(path: String!): Document
+
+  """Return a list of all documents from all locally stored workspaces"""
+  documents(
+    sortedBy: DocumentSortOrder
+
+    """
+    Paths which all returned docs must have at the beginning of their paths
+    """
+    pathPrefixes: [String!]
+
+    """
+    A list of author addresses of authors who have created versions of these documents
+    """
+    versionsByAuthors: [String!]
+  ): [Document!]!
+
+  """Look up a workspace using its path, e.g. +gardening.123456"""
+  workspace(address: String!): Workspace
+
+  """Return a list of locally stored workspaces"""
+  workspaces(sortedBy: WorkspaceSortOrder): [Workspace!]!
+}
+
+"""An object with an ID"""
+interface Node {
+  """
+  An opaque, globally unique identifier, useful for GraphQL clients which use this to automatically manage their client-side caches
+  """
+  id: ID!
+}
+
+"""A description of the kinds of documents this peer is interested in"""
+type SyncFilters {
+  """
+  Describes which paths this peer wants prefixed to documents synced to it
+  """
+  pathPrefixes: [String!]!
+
+  """
+  Describes which authors this peer wants to have participated in documents synced to it
+  """
+  versionsByAuthors: [String!]!
+}
+
+"""A person identified by a public key"""
+type Author implements Node {
+  id: ID!
+
+  """The author's short name without their public key, e.g. suzy"""
+  shortName: String!
+
+  """
+  The author's full address, made of short name and public key, e.g. @suzy.6efJ8v8rtwoBxfN5MKeTF2Qqyf6zBmwmv8oAbendBZHP
+  """
+  address: String!
+
+  """
+  Return a list of documents from this author. If the author is queried within the context of a workspace, only their documents from that workspace will be returned
+  """
+  documents(
+    """The order to return the documents in, defaults to OLDEST"""
+    sortedBy: DocumentSortOrder
+
+    """
+    Paths which all returned docs must have at the beginning of their paths
+    """
+    pathPrefixes: [String!]
+  ): [Document!]!
+
+  """Return a list of workspaces this author has published documents to"""
+  workspaces(
+    """The order to return the workspaces in, defaults to LAST_ACTIVITY_DESC"""
+    sortedBy: WorkspaceSortOrder
+  ): [Workspace!]!
+}
+
+"""A document published by authors to a workspace"""
+union Document = ES3Document | UnknownFormatDocument
+
+"""A document following the ES3 validation format"""
+type ES3Document implements Node {
+  format: String!
+  id: ID!
+
+  """The current value of this document"""
+  value: String!
+
+  """
+  The number of microseconds since the UNIX era began that this document was published
+  """
+  timestamp: Float!
+
+  """The signature of this document that verifies its authenticity"""
+  signature: String!
+
+  """
+  A string identifying this document like a path in a filesystem, e.g. /wiki/bees
+  """
+  path: String!
+
+  """
+  A string identifying this document like a path in a filesystem, prefixed with the workspace e.g. +gardening.123456/wiki/bees
+  """
+  workspacePath: String!
+
+  """The last author who published to this path"""
+  author: Author!
+
+  """The workspace this document belongs to"""
+  workspace: Workspace!
+}
+
+type Workspace implements Node {
+  id: ID!
+
+  """The name of the workspace, without the following random chars"""
+  name: String!
+
+  """The full address of the workspace"""
+  address: String!
+
+  """The number of authors who have published to this workspace"""
+  population: Int!
+
+  """
+  Look up an author who has published to this workspace by their address, e.g. @suzy.6efJ8v8rtwoBxfN5MKeTF2Qqyf6zBmwmv8oAbendBZHP
+  """
+  author(address: String!): Author
+
+  """A list of authors who have published to this workspace"""
+  authors(sortedBy: AuthorSortOrder): [Author!]!
+
+  """Look up a document in this workspace using its path, e.g. /games/chess"""
+  document(path: String!): Document
+
+  """A list of documents published in this workspace"""
+  documents(
+    sortedBy: DocumentSortOrder
+
+    """
+    A path that all returned docs must have at the beginning of their paths
+    """
+    pathPrefixes: [String!]
+
+    """
+    A list of author addresses of authors who have created versions of these documents
+    """
+    versionsByAuthors: [String!]
+  ): [Document!]!
+}
+
+"""A value describing how a list of authors will be ordered"""
+enum AuthorSortOrder {
+  """Order authors by name, ascending"""
+  NAME_ASC
+
+  """Order authors by name, descending"""
+  NAME_DESC
+
+  """
+  Order authors by their last known published document, least recent first
+  """
+  LAST_PUBLISHED_ASC
+
+  """
+  Order authors by their last known published document, most recent first
+  """
+  LAST_PUBLISHED_DESC
+}
+
+"""A value describing how a list of documents will be ordered"""
+enum DocumentSortOrder {
+  """Order documents by those updated most recently"""
+  NEWEST
+
+  """Order documents by those updated least recently"""
+  OLDEST
+}
+
+"""
+Returned when the format of the document is not recognised by any of the validators used by this GraphQL server
+"""
+type UnknownFormatDocument {
+  data: JSON
+}
+
+scalar JSON
+
+"""A value describing how a list of documents will be ordered"""
+enum WorkspaceSortOrder {
+  """Order workspaces by their names in ascending order"""
+  NAME_ASC
+
+  """Order workspaces by their names in descending order"""
+  NAME_DESC
+
+  """Order workspaces by those with the most recent activity"""
+  LAST_ACTIVITY_ASC
+
+  """Order workspaces by those with the least recent activity"""
+  LAST_ACTIVITY_DESC
+
+  """Order workspaces by those with the least number of authors first"""
+  POPULATION_ASC
+
+  """Order workspaces by those with the least number of authors first"""
+  POPULATION_DESC
+}
+
+"""The root mutation type"""
+type Mutation {
+  """Set a value to a workspace's path"""
+  set(
+    author: AuthorInput!
+    document: NewDocumentInput!
+
+    """The workspace address to set the data to, e.g. +cooking.123456"""
+    workspace: String!
+  ): SetResult
+
+  """
+  Sync one of the GraphQL server's locally stored workspaces with a pub's
+  """
+  syncWithPub(
+    """The address of the workspace to sync, e.g. +camping.98765"""
+    workspace: String!
+
+    """The URL of the pub to sync with"""
+    pubUrl: String!
+
+    """The format for this sync operation to take"""
+    format: SyncFormatEnum = REST
+  ): SyncWithPubResult
+
+  """Sync documents to this GraphQL server from a peer"""
+  ingestDocuments(
+    """The address of the workspace to push documents to, e.g. +camping.98765"""
+    workspace: String!
+
+    """The documents to push up to the GraphQL server"""
+    documents: [DocumentInput!]!
+  ): IngestDocumentsResult
+
+  """Attempt to add a new workspace to the current context"""
+  addWorkspace(
+    """The address of the workspace to add"""
+    workspaceAddress: String!
+
+    """
+    The author wishing to add the workspace, possibly used to authorise this operation depending on the configuration
+    """
+    author: AuthorInput
+  ): AddWorkspaceResult
+}
+
+"""
+A possible result following an attempt to set data to a workspace's path
+"""
+union SetResult = SetDataSuccessResult | DocumentRejectedError | WorkspaceNotFoundError
+
+"""A result indicating the document was successfully set to the workspace"""
+type SetDataSuccessResult {
+  document: Document!
+}
+
+"""
+A result indicating that the document was rejected from being set to the workspace, e.g. because it was signed improperly. The reason will always be unknown, until I can work out how to get richer data!
+"""
+type DocumentRejectedError {
+  reason: String!
+}
+
+"""
+A result indicating that the provided workspace is not yet synced on this GraphQL server
+"""
+type WorkspaceNotFoundError {
+  address: String!
+}
+
+"""An input for signing documents by a specific author"""
+input AuthorInput {
+  """
+  The full address of the author, e.g. @suzy.6efJ8v8rtwoBxfN5MKeTF2Qqyf6zBmwmv8oAbendBZHP
+  """
+  address: String!
+
+  """The author's secret key, used for signing"""
+  secret: String!
+}
+
+"""An input for describing a new document"""
+input NewDocumentInput {
+  """The format for new document to follow"""
+  format: DocumentFormat
+
+  """The value of the new document, e.g. "I love honey!"""
+  value: String!
+
+  """The path of the document, e.g. /spices/pepper"""
+  path: String!
+}
+
+enum DocumentFormat {
+  """The third earthstar format!"""
+  ES3
+}
+
+"""The result of an attempted sync operation with a pub"""
+union SyncWithPubResult = SyncSuccess | WorkspaceNotFoundError
+
+"""The result of a successful sync operation."""
+type SyncSuccess {
+  syncedWorkspace: Workspace
+}
+
+enum SyncFormatEnum {
+  """The sync format for REST API Earthstar pubs"""
+  REST
+
+  """The sync format for GraphQL Earthstar pubs"""
+  GRAPHQL
+}
+
+"""The result of an attempt to ingest many documents"""
+union IngestDocumentsResult = WorkspaceNotFoundError | IngestDocumentsSuccess
+
+"""The outcome of a successful document ingestion operation"""
+type IngestDocumentsSuccess {
+  """The workspace which successfully ingested given documents"""
+  workspace: Workspace!
+}
+
+"""An input for describing an existing document"""
+input DocumentInput {
+  """The format the existing document uses e.g. es.3"""
+  format: String!
+
+  """The address of the workspace this document belongs to"""
+  workspace: String!
+
+  """The value of the existing document, e.g. "I love honey!"""
+  value: String!
+
+  """The path of the existing document, e.g. /spices/pepper"""
+  path: String!
+
+  """The address of the existing's document author"""
+  author: String!
+
+  """The timestamp of the existing document"""
+  timestamp: Float!
+
+  """The signature of the existing document"""
+  signature: String!
+}
+
+"""A possible result for adding a workspace"""
+union AddWorkspaceResult = WorkspaceAddedResult | NotPermittedResult | WorkspaceExistsResult
+
+"""Describes a successful addition of a workspace"""
+type WorkspaceAddedResult {
+  """The newly added workspace"""
+  workspace: Workspace!
+}
+
+"""Returned when an attempted operation was not permitted"""
+type NotPermittedResult {
+  """The reason for not being given permission to perform the action."""
+  reason: String
+}
+
+"""Describes a pre-existing workspace"""
+type WorkspaceExistsResult {
+  """The existing workspace"""
+  workspace: Workspace!
+}

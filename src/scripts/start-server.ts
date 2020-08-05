@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { ApolloServer } from "apollo-server";
 import schema from "../schema";
+import { printSchema } from "graphql";
 
 export function isDefined<T>(t: T | undefined): t is T {
   return t !== undefined;
@@ -43,3 +44,5 @@ server
   .then(({ url }) => {
     console.log(`🍄 earthstar-graphql ready at ${url}`);
   });
+
+fs.writeFileSync(path.resolve("./src/schema.graphql"), printSchema(schema));
