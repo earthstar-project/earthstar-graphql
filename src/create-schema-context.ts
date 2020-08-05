@@ -4,8 +4,8 @@ import {
   AddWorkspaceCheck,
   SqliteContext,
   MemoryContext,
-  SyncFilters,
   StorageType,
+  SyncFiltersArg,
 } from "./types";
 
 export const VALIDATORS = [ValidatorEs3];
@@ -13,7 +13,7 @@ export const VALIDATORS = [ValidatorEs3];
 type CommonContextOptions = {
   workspaceAddresses: string[];
   canAddWorkspace?: AddWorkspaceCheck;
-  syncFilters?: SyncFilters;
+  syncFilters?: SyncFiltersArg;
 };
 
 type SqliteContextOptions = {
@@ -48,7 +48,10 @@ export default function createSchemaContext(
       canAddWorkspace: options.canAddWorkspace
         ? options.canAddWorkspace
         : () => true,
-      syncFilters: options.syncFilters ?? EMPTY_SYNC_FILTERS,
+      syncFilters: {
+        ...EMPTY_SYNC_FILTERS,
+        ...options.syncFilters,
+      },
     };
   }
 
@@ -66,6 +69,9 @@ export default function createSchemaContext(
       ? options.canAddWorkspace
       : () => true,
     getWorkspacePath: (options as SqliteContextOptions).getWorkspacePath,
-    syncFilters: options.syncFilters ?? EMPTY_SYNC_FILTERS,
+    syncFilters: {
+      ...EMPTY_SYNC_FILTERS,
+      ...options.syncFilters,
+    },
   };
 }

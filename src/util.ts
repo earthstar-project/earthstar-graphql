@@ -5,6 +5,8 @@ import {
   ESAuthor,
   AuthorSortOrder,
   WorkspaceSortOrder,
+  SyncFilters,
+  SyncFiltersArg,
 } from "./types";
 import { VALIDATORS } from "./create-schema-context";
 
@@ -60,16 +62,10 @@ export async function initWorkspace(address: string, ctx: Context) {
 
 export function getAllDocuments(
   ctx: Context,
-  filters: {
-    pathPrefix?: string;
-    versionsByAuthor?: string;
-  } = {}
-) {
+  filters: SyncFiltersArg
+): Document[] {
   return ctx.workspaces.flatMap((workspace) => {
-    return workspace.documents({
-      pathPrefix: filters.pathPrefix,
-      versionsByAuthor: filters.versionsByAuthor,
-    });
+    return getWorkspaceDocuments(workspace, filters);
   });
 }
 
@@ -120,9 +116,7 @@ export function getAllAuthors(ctx: Context) {
 export function getAuthorDocuments(
   author: ESAuthor,
   ctx: Context,
-  filters: {
-    pathPrefix?: string;
-  } = {}
+  filters: Pick<SyncFiltersArg, "pathPrefixes">
 ): Document[] {
   const workspaces = author.fromWorkspace
     ? ctx.workspaces.filter((ws) => author.fromWorkspace === ws.workspace)
@@ -133,10 +127,7 @@ export function getAuthorDocuments(
       return [];
     }
 
-    return workspace.documents({
-      versionsByAuthor: author.address,
-      pathPrefix: filters.pathPrefix,
-    });
+    return getWorkspaceDocuments(workspace, filters);
   });
 }
 
@@ -150,7 +141,7 @@ export function authorLastPublishedTimestamp(
   author: ESAuthor,
   ctx: Context
 ): number {
-  const documents = getAuthorDocuments(author, ctx);
+  const documents = getAuthorDocuments(author, ctx, {});
 
   documents.sort((aDoc, bDoc) => {
     return aDoc.timestamp > bDoc.timestamp ? -1 : 1;
@@ -223,6 +214,31 @@ export function getWorkspaceAuthors(workspace: IStorage) {
   return workspace
     .authors()
     .map((address) => ({ address, fromWorkspace: workspace.workspace }));
+}
+
+export function getWorkspaceDocuments(
+  workspace: IStorage,
+  filters: SyncFiltersArg
+): Document[] {
+  const isFiltered = filters.pathPrefixes || filters.versionsByAuthors;
+
+  if (!isFiltered) {
+    return workspace.documents();
+  }
+
+  const byAuthorDocuments = filters.versionsByAuthors
+    ? filters.versionsByAuthors.flatMap((author) => {
+        return workspace.documents({ versionsByAuthor: author });
+      })
+    : [];
+
+  const prefixPathDocuments = filters.pathPrefixes
+    ? filters.pathPrefixes.flatMap((pathPrefix) => {
+        return workspace.documents({ pathPrefix });
+      })
+    : [];
+
+  return [...byAuthorDocuments, ...prefixPathDocuments];
 }
 
 export function workspaceLastActivityTimestamp(workspace: IStorage): number {

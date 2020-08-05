@@ -1,4 +1,4 @@
-import { syncLocalAndHttp } from "earthstar";
+import { syncLocalAndHttp, Document } from "earthstar";
 import { initWorkspace } from "../util";
 import { Context } from "../types";
 import {
@@ -8,6 +8,8 @@ import {
   GraphQLString,
   GraphQLInputObjectType,
   GraphQLEnumType,
+  GraphQLFloat,
+  GraphQLList,
 } from "graphql";
 import { workspaceType } from "./object-types/workspace";
 import { documentUnionType, documentFormatEnum } from "./object-types/document";
@@ -70,10 +72,30 @@ export const setResultType = new GraphQLUnionType({
   },
 });
 
-export const syncResultUnion = new GraphQLUnionType({
-  name: "SyncResult",
-  description: "The result of an attempted sync operation.",
+export const syncWithPubResultUnion = new GraphQLUnionType({
+  name: "SyncWithPubResult",
+  description: "The result of an attempted sync operation with a pub",
   types: [syncSuccessType, workspaceNotFoundErrorObject],
+  resolveType(item) {
+    return item.__type;
+  },
+});
+
+export const ingestDocumentsSuccessType = new GraphQLObjectType({
+  name: "IngestDocumentsSuccess",
+  description: "The outcome of a successful document ingestion operation",
+  fields: {
+    workspace: {
+      type: GraphQLNonNull(workspaceType),
+      description: "The workspace which successfully ingested given documents",
+    },
+  },
+});
+
+export const ingestDocumentsResultUnion = new GraphQLUnionType({
+  name: "IngestDocumentsResult",
+  description: "The result of an attempt to ingest many documents",
+  types: [workspaceNotFoundErrorObject, ingestDocumentsSuccessType],
   resolveType(item) {
     return item.__type;
   },
@@ -122,8 +144,8 @@ export const addWorkspaceResultUnion = new GraphQLUnionType({
   },
 });
 
-export const documentInputType = new GraphQLInputObjectType({
-  name: "DocumentInput",
+export const newDocumentInputType = new GraphQLInputObjectType({
+  name: "NewDocumentInput",
   description: "An input for describing a new document",
   fields: {
     format: {
@@ -157,6 +179,41 @@ export const authorInputType = new GraphQLInputObjectType({
   },
 });
 
+export const documentInputType = new GraphQLInputObjectType({
+  name: "DocumentInput",
+  description: "An input for describing an existing document",
+  fields: {
+    format: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The format the existing document uses e.g. es.3",
+    },
+    workspace: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The address of the workspace this document belongs to",
+    },
+    value: {
+      type: GraphQLNonNull(GraphQLString),
+      description: 'The value of the existing document, e.g. "I love honey!',
+    },
+    path: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The path of the existing document, e.g. /spices/pepper",
+    },
+    author: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The address of the existing's document author",
+    },
+    timestamp: {
+      type: GraphQLNonNull(GraphQLFloat),
+      description: "The timestamp of the existing document",
+    },
+    signature: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The signature of the existing document",
+    },
+  },
+});
+
 export const syncFormatEnum = new GraphQLEnumType({
   name: "SyncFormatEnum",
   values: {
@@ -181,7 +238,7 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
           type: GraphQLNonNull(authorInputType),
         },
         document: {
-          type: GraphQLNonNull(documentInputType),
+          type: GraphQLNonNull(newDocumentInputType),
         },
         workspace: {
           type: GraphQLNonNull(GraphQLString),
@@ -223,8 +280,8 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
         };
       },
     },
-    sync: {
-      type: syncResultUnion,
+    syncWithPub: {
+      type: syncWithPubResultUnion,
       description:
         "Sync one of the GraphQL server's locally stored workspaces with a pub's",
       args: {
@@ -256,12 +313,45 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
         }
 
         if (args.format === "GRAPHQL") {
-          await syncGraphql(maybeStorage, args.pubUrl);
+          await syncGraphql(maybeStorage, args.pubUrl, ctx.syncFilters);
         } else {
           await syncLocalAndHttp(maybeStorage, args.pubUrl);
         }
 
         return { __type: syncSuccessType, syncedWorkspace: maybeStorage };
+      },
+    },
+    ingestDocuments: {
+      type: ingestDocumentsResultUnion,
+      description: "Sync documents to this GraphQL server from a peer",
+      args: {
+        workspace: {
+          type: GraphQLNonNull(GraphQLString),
+          description:
+            "The address of the workspace to push documents to, e.g. +camping.98765",
+        },
+        documents: {
+          type: GraphQLNonNull(GraphQLList(GraphQLNonNull(documentInputType))),
+          description: "The documents to push up to the GraphQL server",
+        },
+      },
+      resolve(_root, args, ctx) {
+        const maybeStorage = ctx.workspaces.find(
+          (wsStorage) => wsStorage.workspace === args.workspace
+        );
+
+        if (maybeStorage === undefined) {
+          return {
+            __type: workspaceNotFoundErrorObject,
+            address: args.workspace,
+          };
+        }
+
+        args.documents.forEach((doc: Document) => {
+          maybeStorage.ingestDocument(doc);
+        });
+
+        return { __type: ingestDocumentsSuccessType, workspace: maybeStorage };
       },
     },
     addWorkspace: {

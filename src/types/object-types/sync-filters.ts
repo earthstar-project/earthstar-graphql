@@ -3,6 +3,7 @@ import {
   GraphQLNonNull,
   GraphQLList,
   GraphQLString,
+  GraphQLInputObjectType,
 } from "graphql";
 import { SyncFilters, Context } from "../../types";
 
@@ -16,15 +17,15 @@ export const syncFiltersObject = new GraphQLObjectType<SyncFilters, Context>({
       description:
         "Describes which paths this peer wants prefixed to documents synced to it",
       resolve(root) {
-        return root.pathPrefixes;
+        return root.pathPrefixes || [];
       },
     },
-    versionsByAuthor: {
+    versionsByAuthors: {
       type: GraphQLNonNull(GraphQLList(GraphQLNonNull(GraphQLString))),
       description:
         "Describes which authors this peer wants to have participated in documents synced to it",
       resolve(root) {
-        return root.versionsByAuthors;
+        return root.versionsByAuthors || [];
       },
     },
   },

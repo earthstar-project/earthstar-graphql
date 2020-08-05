@@ -4,6 +4,7 @@ import {
   getWorkspaceAuthor,
   sortAuthors,
   sortDocuments,
+  getWorkspaceDocuments,
 } from "../../util";
 import {
   GraphQLEnumType,
@@ -128,21 +129,22 @@ export const workspaceType: GraphQLObjectType = new GraphQLObjectType<
         sortedBy: {
           type: documentSortEnum,
         },
-        pathPrefix: {
-          type: GraphQLString,
+        pathPrefixes: {
+          type: GraphQLList(GraphQLNonNull(GraphQLString)),
           description:
             "A path that all returned docs must have at the beginning of their paths",
         },
-        versionsByAuthor: {
-          type: GraphQLString,
-          description: "An author address ",
+        versionsByAuthors: {
+          type: GraphQLList(GraphQLNonNull(GraphQLString)),
+          description:
+            "A list of author addresses of authors who have created versions of these documents",
         },
       },
       resolve(root, args) {
         return sortDocuments(
-          root.documents({
-            pathPrefix: args.pathPrefix,
-            versionsByAuthor: args.versionsByAuthor,
+          getWorkspaceDocuments(root, {
+            pathPrefixes: args.pathPrefixes,
+            versionsByAuthors: args.versionsByAuthors,
           }),
           args.sortedBy
         );

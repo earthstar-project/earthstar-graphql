@@ -18,7 +18,9 @@ describe("query", () => {
     const result = await query(TEST_QUERY, {}, ctx);
 
     expect(result).toEqual({
-      data: { workspaces: [{ address: "+testing.123", name: "testing" }] },
+      data: {
+        workspaces: [{ address: "+testing.123", name: "testing" }],
+      },
     });
   });
 
@@ -33,7 +35,7 @@ describe("query", () => {
       workspace: "+testing.123",
     };
 
-    const TEST_MUTATION = `mutation TestMutation($author: AuthorInput!, $document: DocumentInput!, $workspace: String!) {
+    const TEST_MUTATION = `mutation TestMutation($author: AuthorInput!, $document: NewDocumentInput!, $workspace: String!) {
           set(
               author: $author,
               document: $document,

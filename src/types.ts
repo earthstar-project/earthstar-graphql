@@ -18,6 +18,8 @@ export type SyncFilters = {
   versionsByAuthors: string[];
 };
 
+export type SyncFiltersArg = Partial<SyncFilters>;
+
 export type ContextBase = {
   storageMode: StorageType;
   workspaces: IStorage[];
