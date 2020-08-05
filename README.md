@@ -40,32 +40,27 @@ However you decide to query the schema, you need a _context_. This is where data
 
 You will need to build a context first, which you can provide to the `query` function or whatever GraphQL solution you're using.
 
-Both adding new data to a workspace and syncing a workspace with a pub are triggered via the GraphQL API, with the `set` and `sync` mutations.
+Both adding new data to a workspace and syncing a workspace with another pub are triggered via the GraphQL API, with the `set` and `sync` mutations. Sending data to a workspace from another peer is done using a `ingestDocuments` mutation.
 
 ### API
 
-#### `makeMemoryContext`
+#### `createSchemaContext`
 
 ```ts
-function makeMemoryContext(
-  workspaceAddresses: string[],
-  canAddWorkspace?: (address: string, author?: AuthorKeypair) => boolean
-): MemoryContext;
+function createSchemaContext(
+  mode: "MEMORY" | "SQLITE",
+  options: ContextOptions
+): Context;
 ```
 
-Creates a GraphQL context which stores data from multiple workspaces in-memory. You can also pass an optional `canAddWorkspace` function that acts to authorise additions of new workspaces.
+Creates a GraphQL context which stores data from multiple workspaces. It can store this data in-memory or using SQLite.
 
-#### `makeSqliteContext`
+##### ContextOptions
 
-```ts
-function makeSqliteContext(
-  workspaces: { workspaceAddress: string; path: string }[],
-  getWorkspacePath: (address: string) => string,
-  canAddWorkspace?: (address: string, author?: AuthorKeypair) => boolean
-): SQLiteContext;
-```
-
-Creates a GraphQL context which persists data for multiple workspaces in SQLite databases. The paths for these workspaces are derived using the `getWorkspacePath` function arg. You can also pass an optional `canAddWorkspace` function that acts to authorise additions of new workspaces.
+- `workspaceAddresses: string[]`: A list of workspaces addresses to initialise the context with.
+- `canAddWorkspace?: ( workspaceAddress: string, author?: AuthorKeypair ) => boolean`: A function that is called when someone attempts to add a new workspace, and which returns a boolean indicating whether this is authorised.
+- `syncFilters?: { pathPrefixes?: string[], versionsByAuthors?: string[] }`: An object describing the kinds of documents the context wants to sync. Optional, and not all pubs respect it.
+- `getWorkspacePath: (address: string) => string`: (SQLite context only): A function which returns the path where a workspace's SQLite database is stored.
 
 #### `query`
 
@@ -120,8 +115,8 @@ function syncGraphql(
   storage: IStorage,
   graphqlUrl: string,
   filters: {
-    pathPrefix?: string;
-    versionsByAuthor?: string;
+    pathPrefixes?: string[];
+    versionsByAuthors?: string[];
   }
 ): void;
 ```

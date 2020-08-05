@@ -3,6 +3,8 @@ import fetch from "cross-fetch";
 import { ExecutionResult } from "graphql";
 import { SyncFilters, SyncFiltersArg } from "./types";
 import { graphql } from "msw/lib/types";
+import { doc } from "prettier";
+import { getWorkspaceDocuments } from "./util";
 
 export const PULL_QUERY = `query PullQuery(
     $workspaceAddress: String!, 
@@ -86,21 +88,6 @@ type IngestMutation = {
       };
 };
 
-function assembleDocumentsToPush(
-  storage: IStorage,
-  filters: SyncFilters
-): Document[] {
-  const byAuthorDocuments = filters.versionsByAuthors.flatMap((author) => {
-    return storage.documents({ versionsByAuthor: author });
-  });
-
-  const prefixPathDocuments = filters.pathPrefixes.flatMap((pathPrefix) => {
-    return storage.documents({ pathPrefix });
-  });
-
-  return [...byAuthorDocuments, ...prefixPathDocuments];
-}
-
 export default async function syncGraphql(
   storage: IStorage,
   graphqlUrl: string,
@@ -130,7 +117,7 @@ export default async function syncGraphql(
     );
 
     const documentsToPush = pullJson.data
-      ? assembleDocumentsToPush(storage, pullJson.data.syncFilters)
+      ? getWorkspaceDocuments(storage, pullJson.data.syncFilters)
       : storage.documents();
 
     const ingestRes = await fetch(graphqlUrl, {
