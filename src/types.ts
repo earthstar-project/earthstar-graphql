@@ -13,6 +13,11 @@ export type AddWorkspaceCheck = (
   author?: AuthorKeypair
 ) => boolean;
 
+export type SyncFilters = {
+  pathPrefixes: string[];
+  versionsByAuthors: string[];
+};
+
 export type ContextBase = {
   storageMode: StorageType;
   workspaces: IStorage[];

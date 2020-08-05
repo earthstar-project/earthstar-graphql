@@ -1,5 +1,5 @@
 import { generateAuthorKeypair, sign, Document, ValidatorEs3 } from "earthstar";
-import { makeMemoryContext, query } from "..";
+import { createSchemaContext, query } from "..";
 import { graphql } from "msw";
 import { SYNC_QUERY } from "../sync-graphql";
 import { setupServer } from "msw/node";
@@ -7,7 +7,9 @@ import { setupServer } from "msw/node";
 const TEST_WORKSPACE_ADDR = "+test.123";
 const TEST_AUTHOR = generateAuthorKeypair("test");
 
-const context = makeMemoryContext([TEST_WORKSPACE_ADDR]);
+const context = createSchemaContext("MEMORY", {
+  workspaceAddresses: [TEST_WORKSPACE_ADDR],
+});
 
 const docs: Document[] = [
   {

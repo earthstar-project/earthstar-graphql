@@ -5,9 +5,8 @@ import {
   ESAuthor,
   AuthorSortOrder,
   WorkspaceSortOrder,
-  StorageType,
 } from "./types";
-import { VALIDATORS, IS_NODE } from "./context";
+import { VALIDATORS } from "./create-schema-context";
 
 const workspaceDocPathRegex = /(\+.*\..[^\/]*)(.*)/;
 

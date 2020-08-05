@@ -1,4 +1,4 @@
-import { makeSqliteContext } from "../context";
+import createSchemaContext from "../create-schema-context";
 import fs from "fs";
 import path from "path";
 import { ApolloServer } from "apollo-server";
@@ -30,15 +30,16 @@ const workspaces =
     })
     .filter(isDefined) || [];
 
-makeSqliteContext(workspaces, (addr) => `./workspaces/${addr}.sqlite`).then(
-  (context) => {
-    const server = new ApolloServer({ schema, context });
-    server
-      .listen({
-        port: 4000,
-      })
-      .then(({ url }) => {
-        console.log(`🍄 earthstar-graphql ready at ${url}`);
-      });
-  }
-);
+const context = createSchemaContext("SQLITE", {
+  workspaceAddresses: workspaces,
+  getWorkspacePath: (addr) => path.resolve(`./workspaces/${addr}.sqlite`),
+});
+
+const server = new ApolloServer({ schema, context });
+server
+  .listen({
+    port: 4000,
+  })
+  .then(({ url }) => {
+    console.log(`🍄 earthstar-graphql ready at ${url}`);
+  });
