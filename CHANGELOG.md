@@ -1,5 +1,14 @@
 # Changelog
 
+## Next
+
+### Internal
+
+- Added a GraphQL SDL of the current schema to src/schema.graphql
+- Added ts-graphql-plugin so TS can validate queries against our schema
+- Added automatically generated TS types for GraphQL queries in this codebase
+- Added a Github action for validating GraphQL queries in the codebase
+
 ## v3.0.0
 
 ### Breaking

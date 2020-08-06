@@ -9,7 +9,8 @@
     "rootDir": "src",
     "plugins": [
       {
-        "name": "nexus/typescript-language-service"
+        "name": "ts-graphql-plugin",
+        "schema": "./src/schema.graphql"
       }
     ],
     "typeRoots": ["node_modules/@types", "types"]

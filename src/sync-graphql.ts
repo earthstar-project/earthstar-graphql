@@ -1,10 +1,10 @@
 import { IStorage, Document } from "earthstar";
 import fetch from "cross-fetch";
 import { ExecutionResult } from "graphql";
-import { SyncFilters, SyncFiltersArg } from "./types";
-import { graphql } from "msw/lib/types";
-import { doc } from "prettier";
+import { SyncFiltersArg } from "./types";
 import { getWorkspaceDocuments } from "./util";
+import { PullQuery } from "./__generated__/pull-query";
+import { IngestMutation } from "./__generated__/ingest-mutation";
 
 export const PULL_QUERY = `query PullQuery(
     $workspaceAddress: String!, 
@@ -34,28 +34,6 @@ export const PULL_QUERY = `query PullQuery(
     }
   }`;
 
-type PullQuery = {
-  syncFilters: {
-    pathPrefixes: string[];
-    versionsByAuthors: string[];
-  };
-  workspace: {
-    documents: {
-      value: string;
-      timestamp: number;
-      signature: string;
-      path: string;
-      format: string;
-      author: {
-        address: string;
-      };
-      workspace: {
-        address: string;
-      };
-    }[];
-  };
-};
-
 export const INGEST_MUTATION = `mutation IngestMutation($workspace: String!, $documents: [DocumentInput!]!) {
   ingestDocuments(workspace: $workspace, documents: $documents) {
     __typename
@@ -71,22 +49,6 @@ export const INGEST_MUTATION = `mutation IngestMutation($workspace: String!, $do
     }
   }
 }`;
-
-type IngestMutation = {
-  ingestDocuments:
-    | {
-        __typename: "IngestDocumentsSuccess";
-        workspace: {
-          document: {
-            path: string;
-            value: string;
-          };
-        };
-      }
-    | {
-        __typename: "WorkspaceNotFoundError";
-      };
-};
 
 export default async function syncGraphql(
   storage: IStorage,
@@ -107,7 +69,7 @@ export default async function syncGraphql(
 
   const pullJson: ExecutionResult<PullQuery> = await pullRes.json();
 
-  if (pullJson.data) {
+  if (pullJson.data && pullJson.data.workspace) {
     const pulledDocuments: Document[] = pullJson.data.workspace.documents.map(
       ({ author, workspace, ...rest }) => ({
         ...rest,

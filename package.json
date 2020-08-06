@@ -21,7 +21,9 @@
     "build": "tsdx build",
     "prepare": "tsdx build",
     "dev": "ts-node-dev --respawn --no-notify --transpile-only -P server.tsconfig.json ./src/scripts/start-server.ts --ignore=built",
-    "server": "ts-node --transpile-only -P server.tsconfig.json ./src/scripts/start-server.ts --ignore=built"
+    "server": "ts-node --transpile-only -P server.tsconfig.json ./src/scripts/start-server.ts --ignore=built",
+    "typegen": "yarn run ts-graphql-plugin typegen",
+    "validate": "yarn run ts-graphql-plugin validate --exitOnWarn"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.10.4",
@@ -33,6 +35,7 @@
     "jest": "^26.1.0",
     "msw": "^0.20.1",
     "prettier": "^2.0.5",
+    "ts-graphql-plugin": "^1.12.0",
     "ts-node": "^8.10.2",
     "ts-node-dev": "^1.0.0-pre.52",
     "tsdx": "^0.13.2",

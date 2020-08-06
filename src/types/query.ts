@@ -50,7 +50,7 @@ export const queryType = new GraphQLObjectType<{}, Context>({
       },
     },
     syncFilters: {
-      type: syncFiltersObject,
+      type: GraphQLNonNull(syncFiltersObject),
       resolve(_root, _args, ctx) {
         return ctx.syncFilters;
       },

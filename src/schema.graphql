@@ -2,7 +2,7 @@
 type Query {
   """Fetch an object using a GUID"""
   node(id: String!): Node
-  syncFilters: SyncFilters
+  syncFilters: SyncFilters!
 
   """
   Look up an author by address, e.g. @suzy.6efJ8v8rtwoBxfN5MKeTF2Qqyf6zBmwmv8oAbendBZHP
@@ -232,7 +232,7 @@ type Mutation {
 
     """The workspace address to set the data to, e.g. +cooking.123456"""
     workspace: String!
-  ): SetResult
+  ): SetResult!
 
   """
   Sync one of the GraphQL server's locally stored workspaces with a pub's
@@ -246,7 +246,7 @@ type Mutation {
 
     """The format for this sync operation to take"""
     format: SyncFormatEnum = REST
-  ): SyncWithPubResult
+  ): SyncWithPubResult!
 
   """Sync documents to this GraphQL server from a peer"""
   ingestDocuments(
@@ -255,7 +255,7 @@ type Mutation {
 
     """The documents to push up to the GraphQL server"""
     documents: [DocumentInput!]!
-  ): IngestDocumentsResult
+  ): IngestDocumentsResult!
 
   """Attempt to add a new workspace to the current context"""
   addWorkspace(
@@ -266,7 +266,7 @@ type Mutation {
     The author wishing to add the workspace, possibly used to authorise this operation depending on the configuration
     """
     author: AuthorInput
-  ): AddWorkspaceResult
+  ): AddWorkspaceResult!
 }
 
 """

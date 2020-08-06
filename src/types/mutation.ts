@@ -10,6 +10,7 @@ import {
   GraphQLEnumType,
   GraphQLFloat,
   GraphQLList,
+  graphql,
 } from "graphql";
 import { workspaceType } from "./object-types/workspace";
 import { documentUnionType, documentFormatEnum } from "./object-types/document";
@@ -231,7 +232,7 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
   description: "The root mutation type",
   fields: () => ({
     set: {
-      type: setResultType,
+      type: GraphQLNonNull(setResultType),
       description: "Set a value to a workspace's path",
       args: {
         author: {
@@ -281,7 +282,7 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
       },
     },
     syncWithPub: {
-      type: syncWithPubResultUnion,
+      type: GraphQLNonNull(syncWithPubResultUnion),
       description:
         "Sync one of the GraphQL server's locally stored workspaces with a pub's",
       args: {
@@ -322,7 +323,7 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
       },
     },
     ingestDocuments: {
-      type: ingestDocumentsResultUnion,
+      type: GraphQLNonNull(ingestDocumentsResultUnion),
       description: "Sync documents to this GraphQL server from a peer",
       args: {
         workspace: {
@@ -355,7 +356,7 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
       },
     },
     addWorkspace: {
-      type: addWorkspaceResultUnion,
+      type: GraphQLNonNull(addWorkspaceResultUnion),
       description: "Attempt to add a new workspace to the current context",
       args: {
         workspaceAddress: {
