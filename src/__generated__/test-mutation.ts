@@ -3,7 +3,7 @@
 export type TestMutation = {
     set: (({
         document: (({
-            value: string;
+            content: string;
         }));
     }));
 };
@@ -14,7 +14,7 @@ export type TestMutationVariables = {
     };
     document: {
         format: ("ES3") | null;
-        value: string;
+        content: string;
         path: string;
     };
     workspace: string;

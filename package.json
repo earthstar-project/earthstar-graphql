@@ -4,10 +4,12 @@
   "version": "3.0.0",
   "dependencies": {
     "cross-fetch": "^3.0.5",
-    "earthstar": "3.1.1",
-    "graphql": "15.3.0",
+    "earthstar": "^5.0.0",
     "graphql-type-json": "0.3.2",
     "js-base64": "3.2.4"
+  },
+  "peerDependencies": {
+    "graphql": "^15.3.0"
   },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

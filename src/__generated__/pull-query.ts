@@ -7,7 +7,9 @@ export type PullQuery = {
     };
     workspace: ({
         documents: ((({
-            value: string;
+            content: string;
+            contentHash: string;
+            deleteAfter: number | null;
             timestamp: number;
             signature: string;
             path: string;

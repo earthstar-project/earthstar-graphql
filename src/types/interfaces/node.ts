@@ -2,9 +2,6 @@ import { GraphQLInterfaceType, GraphQLNonNull, GraphQLID } from "graphql";
 import { encode, decode } from "js-base64";
 import { Document } from "earthstar";
 import { ESAuthor, ESWorkspace } from "../../types";
-import { authorType } from "../object-types/author";
-import { es3DocumentType } from "../object-types/document";
-import { workspaceType } from "../object-types/workspace";
 
 export function encodeToId(typename: string, localId: string): string {
   return encode(`${typename}~${localId}`);
@@ -33,7 +30,7 @@ function nodeIsAuthor(node: ImplementsNode): node is ESAuthor {
 }
 
 function nodeIsDocument(node: ImplementsNode): node is Document {
-  if ((node as Document).value) {
+  if ((node as Document).content) {
     return true;
   }
 
@@ -62,7 +59,7 @@ export const nodeInterface = new GraphQLInterfaceType({
     if (nodeIsAuthor(node)) {
       return "Author";
     } else if (nodeIsDocument(node)) {
-      return "ES3Document";
+      return "ES4Document";
     } else if (nodeIsWorkspace(node)) {
       return "Workspace";
     }

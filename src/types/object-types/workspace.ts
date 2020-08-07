@@ -9,7 +9,6 @@ import {
 import {
   GraphQLEnumType,
   GraphQLObjectType,
-  graphql,
   GraphQLNonNull,
   GraphQLID,
   GraphQLString,

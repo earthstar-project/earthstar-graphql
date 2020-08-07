@@ -1,5 +1,5 @@
 import { getDocumentWorkspace } from "../../util";
-import { ES3Document, Context } from "../../types";
+import { ES4Document, Context } from "../../types";
 import {
   GraphQLEnumType,
   GraphQLObjectType,
@@ -51,30 +51,44 @@ export const unknownFormatDocumentObject = new GraphQLObjectType({
   }),
 });
 
-export const es3DocumentType: GraphQLObjectType = new GraphQLObjectType<
-  ES3Document,
+export const es4DocumentType: GraphQLObjectType = new GraphQLObjectType<
+  ES4Document,
   Context
 >({
-  name: "ES3Document",
-  description: "A document following the ES3 validation format",
+  name: "ES4Document",
+  description: "A document following the ES4 validation format",
   fields: () => ({
     format: {
       type: GraphQLNonNull(GraphQLString),
       resolve() {
-        return "es.3";
+        return "es.4";
       },
     },
     id: {
       type: GraphQLNonNull(GraphQLID),
       resolve(root) {
-        return encodeToId("ES3Document", `${root.workspace}${root.path}`);
+        return encodeToId("ES4Document", `${root.workspace}${root.path}`);
       },
     },
-    value: {
+    content: {
       type: GraphQLNonNull(GraphQLString),
-      description: "The current value of this document",
+      description: "The content of this document",
       resolve(root) {
-        return root.value;
+        return root.content;
+      },
+    },
+    contentHash: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "A hash of this document's content",
+      resolve(root) {
+        return root.contentHash;
+      },
+    },
+    deleteAfter: {
+      type: GraphQLFloat,
+      description: "A timestamp indicating when this document will be deleted",
+      resolve(root) {
+        return root.deleteAfter;
       },
     },
     timestamp: {
@@ -130,10 +144,10 @@ export const es3DocumentType: GraphQLObjectType = new GraphQLObjectType<
 export const documentUnionType = new GraphQLUnionType({
   name: "Document",
   description: "A document published by authors to a workspace",
-  types: [es3DocumentType, unknownFormatDocumentObject],
+  types: [es4DocumentType, unknownFormatDocumentObject],
   resolveType(item) {
-    if (item.format === "es.3") {
-      return es3DocumentType;
+    if (item.format === "es.4") {
+      return es4DocumentType;
     }
 
     return unknownFormatDocumentObject;

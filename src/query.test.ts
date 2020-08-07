@@ -1,11 +1,13 @@
 import query from "./query";
 import createSchemaContext from "./create-schema-context";
-import { generateAuthorKeypair, sign, verify } from "earthstar";
+import { generateAuthorKeypair, sign, verify, AuthorKeypair } from "earthstar";
+
+export const TEST_WORKSPACE_ADDR = "+test.a123";
 
 describe("query", () => {
   test("Successfully queries a new context", async () => {
     const ctx = createSchemaContext("MEMORY", {
-      workspaceAddresses: ["+testing.123"],
+      workspaceAddresses: [TEST_WORKSPACE_ADDR],
     });
 
     const TEST_QUERY = `query TestQuery {
@@ -19,20 +21,20 @@ describe("query", () => {
 
     expect(result).toEqual({
       data: {
-        workspaces: [{ address: "+testing.123", name: "testing" }],
+        workspaces: [{ address: TEST_WORKSPACE_ADDR, name: "test" }],
       },
     });
   });
 
   test("Can modify a context's data with a mutation query", async () => {
     const ctx = createSchemaContext("MEMORY", {
-      workspaceAddresses: ["+testing.123"],
+      workspaceAddresses: [TEST_WORKSPACE_ADDR],
     });
 
     const variables = {
       author: generateAuthorKeypair("test"),
-      document: { path: "/testing", value: "is fun!" },
-      workspace: "+testing.123",
+      document: { path: "/testing", content: "is fun!" },
+      workspace: TEST_WORKSPACE_ADDR,
     };
 
     const TEST_MUTATION = `mutation TestMutation($author: AuthorInput!, $document: NewDocumentInput!, $workspace: String!) {
@@ -43,8 +45,8 @@ describe("query", () => {
           ) {
               ... on SetDataSuccessResult {
                   document {
-                      ... on ES3Document {
-                          value
+                      ... on ES4Document {
+                          content
                       }
                   }
               }
@@ -53,18 +55,20 @@ describe("query", () => {
 
     await query(TEST_MUTATION, variables, ctx);
 
-    expect(ctx.workspaces[0].getDocument("/testing")?.value).toEqual("is fun!");
+    expect(ctx.workspaces[0].getDocument("/testing")?.content).toEqual(
+      "is fun!"
+    );
   });
 
   test("Can add a workspace with a mutation query", async () => {
     const ctx = createSchemaContext("MEMORY", {
-      workspaceAddresses: ["+testing.123"],
+      workspaceAddresses: [TEST_WORKSPACE_ADDR],
     });
 
-    const newAddress = "+newspace.123";
+    const NEW_WORKSPACE_ADDR = "+newspace.a123";
 
     const variables = {
-      workspaceAddress: newAddress,
+      workspaceAddress: NEW_WORKSPACE_ADDR,
       author: null,
     };
 
@@ -82,17 +86,18 @@ describe("query", () => {
     await query(ADD_MUTATION, variables, ctx);
 
     expect(
-      ctx.workspaces.find((ws) => ws.workspace === newAddress)
+      ctx.workspaces.find((ws) => ws.workspace === NEW_WORKSPACE_ADDR)
     ).toBeDefined();
 
-    const permittedKeypair = generateAuthorKeypair("test");
-    const message = sign(permittedKeypair, "canAddWorkspace");
+    const permittedKeypair = generateAuthorKeypair("test") as AuthorKeypair;
+    const PERMITTED_WORKSPACE_ADDR = "+allowed.a123";
+    const message = sign(permittedKeypair, "canAddWorkspace") as string;
 
     const restrictedCtx = createSchemaContext("MEMORY", {
       workspaceAddresses: [],
       canAddWorkspace: (address, keypair) => {
         if (
-          address === "+allowed.999" &&
+          address === PERMITTED_WORKSPACE_ADDR &&
           keypair &&
           verify(keypair.address, message, "canAddWorkspace")
         ) {
@@ -104,11 +109,11 @@ describe("query", () => {
     });
 
     const badAuthorVars = {
-      workspaceAddress: "+allowed.999",
+      workspaceAddress: PERMITTED_WORKSPACE_ADDR,
       author: generateAuthorKeypair("nope"),
     };
     const validVars = {
-      workspaceAddress: "+allowed.999",
+      workspaceAddress: PERMITTED_WORKSPACE_ADDR,
       author: permittedKeypair,
     };
 
@@ -125,7 +130,9 @@ describe("query", () => {
     await query(ADD_MUTATION, validVars, restrictedCtx);
 
     expect(
-      restrictedCtx.workspaces.find((ws) => ws.workspace === "+allowed.999")
+      restrictedCtx.workspaces.find(
+        (ws) => ws.workspace === PERMITTED_WORKSPACE_ADDR
+      )
     ).toBeDefined();
   });
 });

@@ -1,4 +1,4 @@
-import { ValidatorEs3, StorageSqlite, StorageMemory } from "earthstar";
+import { ValidatorEs4, StorageSqlite, StorageMemory } from "earthstar";
 import {
   Context,
   AddWorkspaceCheck,
@@ -8,7 +8,7 @@ import {
   SyncFiltersArg,
 } from "./types";
 
-export const VALIDATORS = [ValidatorEs3];
+export const VALIDATORS = [ValidatorEs4];
 
 type CommonContextOptions = {
   workspaceAddresses: string[];

@@ -1,10 +1,4 @@
-import {
-  IStorage,
-  Document,
-  AuthorKeypair,
-  StorageMemory,
-  StorageSqlite,
-} from "earthstar";
+import { IStorage, Document, AuthorKeypair } from "earthstar";
 
 export type StorageType = "MEMORY" | "SQLITE";
 
@@ -60,4 +54,4 @@ export type ESAuthor = {
   address: string;
   fromWorkspace?: string;
 };
-export type ES3Document = Document;
+export type ES4Document = Document;

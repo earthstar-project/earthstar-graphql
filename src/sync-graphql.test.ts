@@ -1,17 +1,18 @@
 import createMockServer from "./mocks/create-mock-server";
 import {
   StorageMemory,
-  ValidatorEs3,
+  ValidatorEs4,
   generateAuthorKeypair,
   sign,
   Document,
+  AuthorKeypair,
 } from "earthstar";
 import syncGraphql from "./sync-graphql";
 import { createSchemaContext } from ".";
 import { Context } from "./types";
 
-export const TEST_WORKSPACE_ADDR = "+test.123";
-export const TEST_AUTHOR = generateAuthorKeypair("test");
+export const TEST_WORKSPACE_ADDR = "+test.a123";
+export const TEST_AUTHOR = generateAuthorKeypair("test") as AuthorKeypair;
 
 function setupTestServerContext(): Context {
   const testServerContext = createSchemaContext("MEMORY", {
@@ -22,48 +23,47 @@ function setupTestServerContext(): Context {
     },
   });
 
-  const docs: Document[] = [
+  const docs = [
     {
-      format: "es.3",
+      format: "es.4",
       workspace: TEST_WORKSPACE_ADDR,
       author: TEST_AUTHOR.address,
       path: "/test/1",
-      value: "The first test document",
+      content: "The first test document",
       timestamp: Date.now() * 1000 - 30000,
       signature: "",
     },
     {
-      format: "es.3",
+      format: "es.4",
       workspace: TEST_WORKSPACE_ADDR,
       author: TEST_AUTHOR.address,
       path: "/test/2",
-      value: "The second test document",
+      content: "The second test document",
       timestamp: Date.now() * 1000 - 20000,
       signature: "",
     },
     {
-      format: "es.3",
+      format: "es.4",
       workspace: TEST_WORKSPACE_ADDR,
       author: TEST_AUTHOR.address,
       path: "/test/3",
-      value: "The third test document",
+      content: "The third test document",
       timestamp: Date.now() * 1000 - 10000,
       signature: "",
     },
     {
-      format: "es.3",
+      format: "es.4",
       workspace: TEST_WORKSPACE_ADDR,
       author: TEST_AUTHOR.address,
       path: "/wiki/door",
-      value: "The third test document",
+      content: "The third test document",
       timestamp: Date.now() * 1000 - 20000,
       signature: "",
     },
   ];
 
   docs.forEach((doc) => {
-    const signedDoc = ValidatorEs3.signDocument(TEST_AUTHOR, doc);
-    testServerContext.workspaces[0].ingestDocument(signedDoc);
+    testServerContext.workspaces[0].set(TEST_AUTHOR, doc);
   });
 
   return testServerContext;
@@ -91,21 +91,20 @@ afterAll(() => {
 });
 
 test("Syncs", async () => {
-  const storage = new StorageMemory([ValidatorEs3], "+test.123");
-  const author = generateAuthorKeypair("test");
+  const storage = new StorageMemory([ValidatorEs4], TEST_WORKSPACE_ADDR);
+  const author = generateAuthorKeypair("test") as AuthorKeypair;
 
   const doc = {
-    format: "es.3",
-    workspace: "+test.123",
+    format: "es.4",
+    workspace: TEST_WORKSPACE_ADDR,
     author: author.address,
     path: "/test/4",
-    value: "A local document",
+    content: "A local document",
     timestamp: Date.now() * 1000,
     signature: sign(author, "A local document"),
   };
 
-  const signedDoc = ValidatorEs3.signDocument(author, doc);
-  storage.ingestDocument(signedDoc);
+  storage.set(author, doc);
 
   await syncGraphql(storage, "https://test.server/graphql", {});
 
@@ -117,7 +116,7 @@ test("Syncs", async () => {
     "/test/4",
     "/wiki/door",
   ]);
-  expect(storage.documents({ path: "/test/4" })[0].value).toEqual(
+  expect(storage.documents({ path: "/test/4" })[0].content).toEqual(
     "A local document"
   );
   expect(storage.documents({ path: "/test/4" })[0].author).toEqual(
@@ -126,46 +125,46 @@ test("Syncs", async () => {
 });
 
 test("Filter Syncs", async () => {
-  const storage = new StorageMemory([ValidatorEs3], "+test.123");
-  const author = generateAuthorKeypair("test");
+  const storage = new StorageMemory([ValidatorEs4], "+test.a123");
+  const author = generateAuthorKeypair("test") as AuthorKeypair;
 
   [
     {
-      format: "es.3",
-      workspace: "+test.123",
-      author: author.address,
+      format: "es.4",
+      workspace: TEST_WORKSPACE_ADDR,
+      author: author,
       path: "/test/4",
-      value: "A local document",
+      content: "A local document",
       timestamp: Date.now() * 1000,
       signature: sign(author, "A local document"),
     },
     {
-      format: "es.3",
-      workspace: "+test.123",
-      author: author.address,
+      format: "es.4",
+      workspace: TEST_WORKSPACE_ADDR,
+      author: author,
       path: "/memes",
-      value: "...",
+      content: "...",
       timestamp: Date.now() * 1000,
       signature: sign(author, "..."),
     },
     {
-      format: "es.3",
-      workspace: "+test.123",
-      author: TEST_AUTHOR.address,
+      format: "es.4",
+      workspace: TEST_WORKSPACE_ADDR,
+      author: TEST_AUTHOR,
       path: "/stuff",
-      value: "final_final_draft_v2.psd",
+      content: "final_final_draft_v2.psd",
       timestamp: Date.now() * 1000,
       signature: sign(author, "final_final_draft_v2.psd"),
     },
   ]
-    .map((doc) => {
-      return ValidatorEs3.signDocument(
-        doc.author === author.address ? author : TEST_AUTHOR,
-        doc
-      );
+    .map(({ author, ...rest }) => {
+      return {
+        author,
+        doc: rest,
+      };
     })
-    .forEach((signedDoc) => {
-      storage.ingestDocument(signedDoc);
+    .forEach(({ author, doc }) => {
+      storage.set(author, doc);
     });
 
   await syncGraphql(storage, "https://test.server/graphql", {

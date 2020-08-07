@@ -91,15 +91,21 @@ type Author implements Node {
 }
 
 """A document published by authors to a workspace"""
-union Document = ES3Document | UnknownFormatDocument
+union Document = ES4Document | UnknownFormatDocument
 
-"""A document following the ES3 validation format"""
-type ES3Document implements Node {
+"""A document following the ES4 validation format"""
+type ES4Document implements Node {
   format: String!
   id: ID!
 
-  """The current value of this document"""
-  value: String!
+  """The content of this document"""
+  content: String!
+
+  """A hash of this document's content"""
+  contentHash: String!
+
+  """A timestamp indicating when this document will be deleted"""
+  deleteAfter: Float
 
   """
   The number of microseconds since the UNIX era began that this document was published
@@ -309,8 +315,8 @@ input NewDocumentInput {
   """The format for new document to follow"""
   format: DocumentFormat
 
-  """The value of the new document, e.g. "I love honey!"""
-  value: String!
+  """The content of the new document, e.g. "I love honey!"""
+  content: String!
 
   """The path of the document, e.g. /spices/pepper"""
   path: String!
@@ -354,8 +360,11 @@ input DocumentInput {
   """The address of the workspace this document belongs to"""
   workspace: String!
 
-  """The value of the existing document, e.g. "I love honey!"""
-  value: String!
+  """The content of the existing document, e.g. "I love honey!"""
+  content: String!
+
+  """The hash of the document's content"""
+  contentHash: String!
 
   """The path of the existing document, e.g. /spices/pepper"""
   path: String!
@@ -368,6 +377,9 @@ input DocumentInput {
 
   """The signature of the existing document"""
   signature: String!
+
+  """An optional timestamp indicating when this document should be deleted"""
+  deleteAfter: Float
 }
 
 """A possible result for adding a workspace"""

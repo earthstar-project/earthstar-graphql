@@ -17,8 +17,10 @@ export const PULL_QUERY = `query PullQuery(
     }
     workspace(address: $workspaceAddress) {
       documents(versionsByAuthors: $versionsByAuthors, pathPrefixes: $pathPrefixes) {
-        ... on ES3Document {
-          value
+        ... on ES4Document {
+          content
+          contentHash
+          deleteAfter
           timestamp
           signature
           path
@@ -40,9 +42,8 @@ export const INGEST_MUTATION = `mutation IngestMutation($workspace: String!, $do
     ... on IngestDocumentsSuccess {
       workspace {
         documents {
-          ... on ES3Document {
-            path
-            value
+          ... on ES4Document {
+            contentHash
           }
         }
       }     
@@ -71,8 +72,9 @@ export default async function syncGraphql(
 
   if (pullJson.data && pullJson.data.workspace) {
     const pulledDocuments: Document[] = pullJson.data.workspace.documents.map(
-      ({ author, workspace, ...rest }) => ({
+      ({ author, workspace, deleteAfter, ...rest }) => ({
         ...rest,
+        ...(deleteAfter ? { deleteAfter } : {}),
         author: author.address,
         workspace: workspace.address,
       })

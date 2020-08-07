@@ -6,8 +6,7 @@ export type IngestMutation = {
     } & (({
         workspace: {
             documents: ((({
-                path: string;
-                value: string;
+                contentHash: string;
             })))[];
         };
     }));
@@ -17,10 +16,11 @@ export type IngestMutationVariables = {
     documents: ({
         format: string;
         workspace: string;
-        value: string;
+        content: string;
         path: string;
         author: string;
         timestamp: number;
         signature: string;
+        deleteAfter: number | null;
     })[];
 };

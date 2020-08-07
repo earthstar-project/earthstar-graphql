@@ -153,9 +153,9 @@ export const newDocumentInputType = new GraphQLInputObjectType({
       type: documentFormatEnum,
       description: "The format for new document to follow",
     },
-    value: {
+    content: {
       type: GraphQLNonNull(GraphQLString),
-      description: 'The value of the new document, e.g. "I love honey!',
+      description: 'The content of the new document, e.g. "I love honey!',
     },
     path: {
       type: GraphQLNonNull(GraphQLString),
@@ -192,9 +192,13 @@ export const documentInputType = new GraphQLInputObjectType({
       type: GraphQLNonNull(GraphQLString),
       description: "The address of the workspace this document belongs to",
     },
-    value: {
+    content: {
       type: GraphQLNonNull(GraphQLString),
-      description: 'The value of the existing document, e.g. "I love honey!',
+      description: 'The content of the existing document, e.g. "I love honey!',
+    },
+    contentHash: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The hash of the document's content",
     },
     path: {
       type: GraphQLNonNull(GraphQLString),
@@ -211,6 +215,11 @@ export const documentInputType = new GraphQLInputObjectType({
     signature: {
       type: GraphQLNonNull(GraphQLString),
       description: "The signature of the existing document",
+    },
+    deleteAfter: {
+      type: GraphQLFloat,
+      description:
+        "An optional timestamp indicating when this document should be deleted",
     },
   },
 });
@@ -261,8 +270,8 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
         }
 
         const wasSuccessful = ws.set(args.author, {
-          format: args.document.format || "es.3",
-          value: args.document.value,
+          format: args.document.format || "es.4",
+          content: args.document.content,
           path: args.document.path,
         });
 
