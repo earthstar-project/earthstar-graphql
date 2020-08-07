@@ -5,6 +5,7 @@ import { SyncFiltersArg } from "./types";
 import { getWorkspaceDocuments } from "./util";
 import { PullQuery } from "./__generated__/pull-query";
 import { IngestMutation } from "./__generated__/ingest-mutation";
+import { json } from "msw/lib/types/context";
 
 export const PULL_QUERY = `query PullQuery(
     $workspaceAddress: String!, 
@@ -39,14 +40,16 @@ export const PULL_QUERY = `query PullQuery(
 export const INGEST_MUTATION = `mutation IngestMutation($workspace: String!, $documents: [DocumentInput!]!) {
   ingestDocuments(workspace: $workspace, documents: $documents) {
     __typename
-    ... on IngestDocumentsSuccess {
-      workspace {
+    ... on IngestDocumentsResult {
+      __typename
+      ... on DocumentIngestionReport {
+        acceptedCount
+        ignoredCount
+        rejectedCount
         documents {
-          ... on ES4Document {
-            contentHash
-          }
+          __typename
         }
-      }     
+      }
     }
   }
 }`;
@@ -100,9 +103,12 @@ export default async function syncGraphql(
 
     if (ingestJson.data) {
       if (
-        ingestJson.data.ingestDocuments.__typename !== "IngestDocumentsSuccess"
+        ingestJson.data.ingestDocuments.__typename !== "DocumentIngestionReport"
       ) {
-        console.error("Uh-oh!");
+        console.error(
+          "Was expecting a DocumentIngestionReport, but instead got back the following type:"
+        );
+        console.error(ingestJson.data.ingestDocuments.__typename);
       }
     }
 

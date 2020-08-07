@@ -289,6 +289,10 @@ type SetDataSuccessResult {
 A result indicating that the document was rejected from being set to the workspace, e.g. because it was signed improperly. The reason will always be unknown, until I can work out how to get richer data!
 """
 type DocumentRejectedError {
+  """The type name of the Earthstar Error"""
+  errorName: String!
+
+  """The reason for this error"""
   reason: String!
 }
 
@@ -344,12 +348,45 @@ enum SyncFormatEnum {
 }
 
 """The result of an attempt to ingest many documents"""
-union IngestDocumentsResult = WorkspaceNotFoundError | IngestDocumentsSuccess
+union IngestDocumentsResult = WorkspaceNotFoundError | DocumentIngestionReport
 
-"""The outcome of a successful document ingestion operation"""
-type IngestDocumentsSuccess {
-  """The workspace which successfully ingested given documents"""
-  workspace: Workspace!
+"""A report of whether each document was ingested, ignored, or failed"""
+type DocumentIngestionReport {
+  """The results of all documents"""
+  documents: [DocumentIngestionResult!]!
+
+  """The number of documents which were ignored"""
+  ignoredCount: Float!
+
+  """The number of documents which were rejected"""
+  rejectedCount: Float!
+
+  """The number of documents which were accepted"""
+  acceptedCount: Float!
+}
+
+"""Describes the result of attempting to ingest this document"""
+union DocumentIngestionResult = AcceptedDocumentIngestion | IgnoredDocumentIngestion | RejectedDocumentIngestion
+
+"""A successfully ingested document"""
+type AcceptedDocumentIngestion {
+  """The document which was accepted"""
+  document: Document!
+}
+
+"""A document which was ignored during ingestion"""
+type IgnoredDocumentIngestion {
+  """The document which was ignored"""
+  document: Document!
+}
+
+"""A document which was rejected during ingestion"""
+type RejectedDocumentIngestion {
+  """The reason this document was rejection"""
+  rejectionReason: String!
+
+  """The document which failed to be ingested"""
+  document: Document!
 }
 
 """An input for describing an existing document"""

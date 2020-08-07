@@ -1,4 +1,4 @@
-import { syncLocalAndHttp, Document } from "earthstar";
+import { syncLocalAndHttp, Document, isErr } from "earthstar";
 import { initWorkspace } from "../util";
 import { Context } from "../types";
 import {
@@ -31,8 +31,13 @@ export const documentRejectedErrorObject = new GraphQLObjectType({
   description:
     "A result indicating that the document was rejected from being set to the workspace, e.g. because it was signed improperly. The reason will always be unknown, until I can work out how to get richer data!",
   fields: {
+    errorName: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The type name of the Earthstar Error",
+    },
     reason: {
       type: GraphQLNonNull(GraphQLString),
+      description: "The reason for this error",
     },
   },
 });
@@ -82,13 +87,90 @@ export const syncWithPubResultUnion = new GraphQLUnionType({
   },
 });
 
-export const ingestDocumentsSuccessType = new GraphQLObjectType({
-  name: "IngestDocumentsSuccess",
-  description: "The outcome of a successful document ingestion operation",
+export const acceptedDocumentIngestionType = new GraphQLObjectType({
+  name: "AcceptedDocumentIngestion",
+  description: "A successfully ingested document",
   fields: {
-    workspace: {
-      type: GraphQLNonNull(workspaceType),
-      description: "The workspace which successfully ingested given documents",
+    document: {
+      type: GraphQLNonNull(documentUnionType),
+      description: "The document which was accepted",
+      resolve(root) {
+        return root.document;
+      },
+    },
+  },
+});
+
+export const ignoredDocumentIngestionType = new GraphQLObjectType({
+  name: "IgnoredDocumentIngestion",
+  description: "A document which was ignored during ingestion",
+  fields: {
+    document: {
+      type: GraphQLNonNull(documentUnionType),
+      description: "The document which was ignored",
+      resolve(root) {
+        return root.document;
+      },
+    },
+  },
+});
+
+export const rejectedDocumentIngestionType = new GraphQLObjectType({
+  name: "RejectedDocumentIngestion",
+  description: "A document which was rejected during ingestion",
+  fields: {
+    rejectionReason: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The reason this document was rejection",
+      resolve(root) {
+        return root.failureReason;
+      },
+    },
+    document: {
+      type: GraphQLNonNull(documentUnionType),
+      description: "The document which failed to be ingested",
+      resolve(root) {
+        return root.document;
+      },
+    },
+  },
+});
+
+export const documentIngestionResultUnion = new GraphQLUnionType({
+  name: "DocumentIngestionResult",
+  description: "Describes the result of attempting to ingest this document",
+  types: [
+    acceptedDocumentIngestionType,
+    ignoredDocumentIngestionType,
+    rejectedDocumentIngestionType,
+  ],
+  resolveType(item) {
+    return item.__type;
+  },
+});
+
+export const documentIngestionReportType = new GraphQLObjectType({
+  name: "DocumentIngestionReport",
+  description:
+    "A report of whether each document was ingested, ignored, or failed",
+  fields: {
+    documents: {
+      type: GraphQLNonNull(
+        GraphQLList(GraphQLNonNull(documentIngestionResultUnion))
+      ),
+      description: "The results of all documents",
+    },
+    ignoredCount: {
+      type: GraphQLNonNull(GraphQLFloat),
+      description: "The number of documents which were ignored",
+    },
+    rejectedCount: {
+      type: GraphQLNonNull(GraphQLFloat),
+      description: "The number of documents which were rejected",
+    },
+    acceptedCount: {
+      type: GraphQLNonNull(GraphQLFloat),
+      description: "The number of documents which were accepted",
     },
   },
 });
@@ -96,7 +178,7 @@ export const ingestDocumentsSuccessType = new GraphQLObjectType({
 export const ingestDocumentsResultUnion = new GraphQLUnionType({
   name: "IngestDocumentsResult",
   description: "The result of an attempt to ingest many documents",
-  types: [workspaceNotFoundErrorObject, ingestDocumentsSuccessType],
+  types: [workspaceNotFoundErrorObject, documentIngestionReportType],
   resolveType(item) {
     return item.__type;
   },
@@ -269,24 +351,25 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
           };
         }
 
-        const wasSuccessful = ws.set(args.author, {
+        const setResult = ws.set(args.author, {
           format: args.document.format || "es.4",
           content: args.document.content,
           path: args.document.path,
         });
 
-        if (wasSuccessful) {
+        if (isErr(setResult)) {
           return {
-            __type: setDataSuccessResultObject,
-            document: ctx.workspaces
-              .find((ws) => ws.workspace === args.workspace)
-              ?.getDocument(args.document.path),
+            __type: documentRejectedErrorObject,
+            errorName: setResult.name,
+            reason: setResult.message,
           };
         }
 
         return {
-          __type: documentRejectedErrorObject,
-          reason: "Unknown!",
+          __type: setDataSuccessResultObject,
+          document: ctx.workspaces
+            .find((ws) => ws.workspace === args.workspace)
+            ?.getDocument(args.document.path),
         };
       },
     },
@@ -357,11 +440,43 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
           };
         }
 
-        args.documents.forEach((doc: Document) => {
-          maybeStorage.ingestDocument(doc);
+        const results: {
+          __type: GraphQLObjectType;
+          document: Document;
+          failureReason?: string;
+        }[] = args.documents.map((document: Document) => {
+          const res = maybeStorage.ingestDocument(document);
+
+          if (isErr(res)) {
+            return {
+              document,
+              failureReason: res.message,
+              __type: rejectedDocumentIngestionType,
+            };
+          }
+
+          return {
+            document,
+            __type:
+              res === "ACCEPTED"
+                ? acceptedDocumentIngestionType
+                : ignoredDocumentIngestionType,
+          };
         });
 
-        return { __type: ingestDocumentsSuccessType, workspace: maybeStorage };
+        return {
+          __type: documentIngestionReportType,
+          documents: results,
+          acceptedCount: results.filter(
+            (res) => res.__type === acceptedDocumentIngestionType
+          ).length,
+          ignoredCount: results.filter(
+            (res) => res.__type === ignoredDocumentIngestionType
+          ).length,
+          rejectedCount: results.filter(
+            (res) => res.__type === rejectedDocumentIngestionType
+          ).length,
+        };
       },
     },
     addWorkspace: {
