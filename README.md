@@ -40,7 +40,7 @@ However you decide to query the schema, you need a _context_. This is where data
 
 You will need to build a context first, which you can provide to the `query` function or whatever GraphQL solution you're using.
 
-Both adding new data to a workspace and syncing a workspace with another pub are triggered via the GraphQL API, with the `set` and `sync` mutations. Sending data to a workspace from another peer is done using a `ingestDocuments` mutation.
+Both adding new data to a workspace and syncing a workspace with a remote pub are triggered via the GraphQL API, with the `set` and `syncWithPub` mutations. Sending data to a workspace from another peer is done using a `ingestDocuments` mutation.
 
 ### API
 
@@ -118,7 +118,9 @@ function syncGraphql(
     pathPrefixes?: string[];
     versionsByAuthors?: string[];
   }
-): void;
+): Promise<SyncResult | SyncError>;
 ```
 
 A function you can use to sync documents from a remote GraphQL server to a local `IStorage` instance. It also takes filter options, so you can selectively sync documents. The `IStorage` is mutated in place.
+
+The sync result contains data about the documents which were pushed and pulled, and whether they were accepted, ignored or rejected.

@@ -1,6 +1,19 @@
 # Changelog
 
-## Next
+## 4.0.0
+
+### Breaking
+
+- The `syncWithPub` mutation now returns more results, including a more detailed result type for GraphQL sync which exposes data on all the documents that were pushed and pulled.
+- `ES3Document` has been renamed to `ES4Document`
+- The `value` field on `ES4Document` has been replaced by `content`
+- `graphql` is now a peer dependency
+
+### Improvements
+
+- `DocumentRejectedError` now gives back a reason for why the document was rejected during the `set` Mutation
+- `syncGraphql` now returns a detailed report of the documents pushed and pulled
+- `ES4Document` now has `deleteAfter` and `contentHash` fields
 
 ### Internal
 
@@ -8,6 +21,7 @@
 - Added ts-graphql-plugin so TS can validate queries against our schema
 - Added automatically generated TS types for GraphQL queries in this codebase
 - Added a Github action for validating GraphQL queries in the codebase
+- Refactored how mutations are organised
 
 ## v3.0.0
 
