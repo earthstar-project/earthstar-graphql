@@ -17,8 +17,8 @@ import { jsonScalarType } from "../scalars/json";
 export const documentFormatEnum = new GraphQLEnumType({
   name: "DocumentFormat",
   values: {
-    ES3: {
-      value: "es.3",
+    ES4: {
+      value: "es.4",
       description: "The third earthstar format!",
     },
   },

@@ -14,7 +14,6 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLList,
-  GraphQLScalarType,
 } from "graphql";
 import { Context } from "../types";
 import { authorType, authorSortEnum } from "./object-types/author";
@@ -42,7 +41,7 @@ export const queryType = new GraphQLObjectType<{}, Context>({
             return getAuthor(localId, ctx) || null;
           case "Workspace":
             return getWorkspace(localId, ctx) || null;
-          case "ES3Document":
+          case "ES4Document":
             return getDocument(localId, ctx) || null;
           default:
             return null;

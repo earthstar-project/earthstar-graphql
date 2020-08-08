@@ -79,7 +79,7 @@ const QUERY = `{
   workspaces {
     address
     documents {
-      ... on ES3Document {
+      ... on ES4Document {
         value
         author {
           address

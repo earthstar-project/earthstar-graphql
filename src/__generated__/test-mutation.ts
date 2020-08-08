@@ -13,7 +13,7 @@ export type TestMutationVariables = {
         secret: string;
     };
     document: {
-        format: ("ES3") | null;
+        format: ("ES4") | null;
         content: string;
         path: string;
     };

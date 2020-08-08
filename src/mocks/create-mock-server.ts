@@ -1,5 +1,3 @@
-import { generateAuthorKeypair, sign, Document, ValidatorEs3 } from "earthstar";
-import { createSchemaContext, query } from "..";
 import { graphql } from "msw";
 import { PULL_QUERY, INGEST_MUTATION } from "../sync-graphql";
 import { setupServer } from "msw/node";

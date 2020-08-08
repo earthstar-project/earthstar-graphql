@@ -9,6 +9,9 @@ export type IngestMutation = {
         acceptedCount: number;
         ignoredCount: number;
         rejectedCount: number;
+        documents: ({
+            __typename: "AcceptedDocumentIngestion" | "IgnoredDocumentIngestion" | "RejectedDocumentIngestion";
+        })[];
     })));
 };
 export type IngestMutationVariables = {
