@@ -1,18 +1,43 @@
-import { Document, IStorage, StorageSqlite, StorageMemory } from "earthstar";
+import {
+  Document,
+  IStorage,
+  StorageSqlite,
+  StorageMemory,
+  isErr,
+} from "earthstar";
 import {
   Context,
   DocumentSortOrder,
   ESAuthor,
   AuthorSortOrder,
   WorkspaceSortOrder,
-  SyncFilters,
   SyncFiltersArg,
+  IngestResult,
 } from "./types";
 import { VALIDATORS } from "./create-schema-context";
 
 const workspaceDocPathRegex = /(\+.*\..[^\/]*)(.*)/;
 
 // Document utilities
+
+export function ingestDocuments(storage: IStorage, documents: Document[]) {
+  return documents.map((document: Document) => {
+    const result = storage.ingestDocument(document);
+
+    if (isErr(result)) {
+      return {
+        document,
+        rejectionReason: result.message,
+        result: "REJECTED" as IngestResult,
+      };
+    }
+
+    return {
+      document,
+      result: result as IngestResult,
+    };
+  });
+}
 
 export function getDocument(path: string, ctx: Context) {
   const result = workspaceDocPathRegex.exec(path);

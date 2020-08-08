@@ -167,7 +167,7 @@ test("Filter Syncs", async () => {
       storage.set(author, doc);
     });
 
-  await syncGraphql(storage, "https://test.server/graphql", {
+  const result = await syncGraphql(storage, "https://test.server/graphql", {
     pathPrefixes: ["/wiki"],
   });
 

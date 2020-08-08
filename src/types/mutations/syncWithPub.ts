@@ -6,11 +6,18 @@ import {
   GraphQLString,
   GraphQLFieldConfig,
 } from "graphql";
-import { workspaceNotFoundErrorObject } from "./common";
+import {
+  workspaceNotFoundErrorObject,
+  documentIngestionReportType,
+  rejectedDocumentIngestionType,
+  acceptedDocumentIngestionType,
+  ignoredDocumentIngestionType,
+} from "./common";
 import { workspaceType } from "../object-types/workspace";
 import { Context } from "../../types";
 import syncGraphql from "../../sync-graphql";
-import { syncLocalAndHttp } from "earthstar";
+import { syncLocalAndHttp, isErr } from "earthstar";
+import { doc } from "prettier";
 
 export const syncFormatEnum = new GraphQLEnumType({
   name: "SyncFormatEnum",
@@ -24,12 +31,48 @@ export const syncFormatEnum = new GraphQLEnumType({
   },
 });
 
+export const detailedSyncSuccessType = new GraphQLObjectType({
+  name: "DetailedSyncSuccess",
+  description: "The result of a successful sync operation, with lots of detail",
+  fields: {
+    syncedWorkspace: {
+      description: "The workspace which had documents synced from and to it",
+      type: GraphQLNonNull(workspaceType),
+    },
+    pushed: {
+      description:
+        "A detailed report of the documents which were pushed to the pub. ",
+      type: GraphQLNonNull(documentIngestionReportType),
+    },
+    pulled: {
+      description:
+        "A detailed report of the documents which were pulled from the pub",
+      type: GraphQLNonNull(documentIngestionReportType),
+    },
+  },
+});
+
 export const syncSuccessType = new GraphQLObjectType({
   name: "SyncSuccess",
   description: "The result of a successful sync operation.",
   fields: {
     syncedWorkspace: {
-      type: workspaceType,
+      description: "The workspace which had documents synced from and to it",
+      type: GraphQLNonNull(workspaceType),
+    },
+  },
+});
+
+export const syncErrorType = new GraphQLObjectType({
+  name: "SyncError",
+  description: "The result of a failed sync",
+  fields: {
+    reason: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The reason for the error",
+      resolve(root) {
+        return root.reason;
+      },
     },
   },
 });
@@ -37,7 +80,12 @@ export const syncSuccessType = new GraphQLObjectType({
 export const syncWithPubResultUnion = new GraphQLUnionType({
   name: "SyncWithPubResult",
   description: "The result of an attempted sync operation with a pub",
-  types: [syncSuccessType, workspaceNotFoundErrorObject],
+  types: [
+    syncSuccessType,
+    workspaceNotFoundErrorObject,
+    syncErrorType,
+    detailedSyncSuccessType,
+  ],
   resolveType(item) {
     return item.__type;
   },
@@ -75,11 +123,49 @@ export const syncWithPubField: GraphQLFieldConfig<{}, Context> = {
     }
 
     if (args.format === "GRAPHQL") {
-      await syncGraphql(maybeStorage, args.pubUrl, ctx.syncFilters);
-    } else {
-      await syncLocalAndHttp(maybeStorage, args.pubUrl);
+      const result = await syncGraphql(
+        maybeStorage,
+        args.pubUrl,
+        ctx.syncFilters
+      );
+
+      if (isErr(result)) {
+        return {
+          __type: syncErrorType,
+          reason: result.message,
+        };
+      }
+
+      return {
+        __type: detailedSyncSuccessType,
+        syncedWorkspace: maybeStorage,
+        pushed: {
+          ...result.pushed,
+          documents: result.pushed.documents.map((doc) => ({
+            ...doc,
+            __type:
+              doc.result === "REJECTED"
+                ? rejectedDocumentIngestionType
+                : doc.result === "ACCEPTED"
+                ? acceptedDocumentIngestionType
+                : ignoredDocumentIngestionType,
+          })),
+        },
+        pulled: result.pulled,
+      };
+    }
+    const result = await syncLocalAndHttp(maybeStorage, args.pubUrl);
+
+    if (isErr(result)) {
+      return {
+        __type: syncErrorType,
+        reason: result.message,
+      };
     }
 
-    return { __type: syncSuccessType, syncedWorkspace: maybeStorage };
+    return {
+      __type: syncSuccessType,
+      syncedWorkspace: maybeStorage,
+    };
   },
 };

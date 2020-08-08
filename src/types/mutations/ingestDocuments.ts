@@ -15,7 +15,7 @@ import {
   ignoredDocumentIngestionType,
 } from "./common";
 import documentInputType from "../inputs/documentInput";
-import { Document, isErr } from "earthstar";
+import { ingestDocuments } from "../../util";
 
 export const ingestDocumentsResultUnion = new GraphQLUnionType({
   name: "IngestDocumentsResult",
@@ -52,42 +52,24 @@ export const ingestDocumentsField: GraphQLFieldConfig<{}, Context> = {
       };
     }
 
-    const results: {
-      __type: GraphQLObjectType;
-      document: Document;
-      failureReason?: string;
-    }[] = args.documents.map((document: Document) => {
-      const res = maybeStorage.ingestDocument(document);
-
-      if (isErr(res)) {
-        return {
-          document,
-          failureReason: res.message,
-          __type: rejectedDocumentIngestionType,
-        };
-      }
-
-      return {
-        document,
+    const reports = ingestDocuments(maybeStorage, args.documents).map(
+      (report) => ({
+        ...report,
         __type:
-          res === "ACCEPTED"
+          report.result === "REJECTED"
+            ? rejectedDocumentIngestionType
+            : report.result === "ACCEPTED"
             ? acceptedDocumentIngestionType
             : ignoredDocumentIngestionType,
-      };
-    });
+      })
+    );
 
     return {
       __type: documentIngestionReportType,
-      documents: results,
-      acceptedCount: results.filter(
-        (res) => res.__type === acceptedDocumentIngestionType
-      ).length,
-      ignoredCount: results.filter(
-        (res) => res.__type === ignoredDocumentIngestionType
-      ).length,
-      rejectedCount: results.filter(
-        (res) => res.__type === rejectedDocumentIngestionType
-      ).length,
+      documents: reports,
+      acceptedCount: reports.filter((res) => res.result === "ACCEPTED").length,
+      ignoredCount: reports.filter((res) => res.result === "IGNORED").length,
+      rejectedCount: reports.filter((res) => res.result === "REJECTED").length,
     };
   },
 };

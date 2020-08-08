@@ -7,10 +7,12 @@ import {
   GraphQLUnionType,
 } from "graphql";
 import { documentUnionType } from "../object-types/document";
+import documentIngestion from "../interfaces/documentIngestion";
 
 export const acceptedDocumentIngestionType = new GraphQLObjectType({
   name: "AcceptedDocumentIngestion",
   description: "A document which was accepted during ingestion",
+  interfaces: [documentIngestion],
   fields: {
     document: {
       type: GraphQLNonNull(documentUnionType),
@@ -25,6 +27,7 @@ export const acceptedDocumentIngestionType = new GraphQLObjectType({
 export const ignoredDocumentIngestionType = new GraphQLObjectType({
   name: "IgnoredDocumentIngestion",
   description: "A document which was ignored during ingestion",
+  interfaces: [documentIngestion],
   fields: {
     document: {
       type: GraphQLNonNull(documentUnionType),
@@ -39,6 +42,7 @@ export const ignoredDocumentIngestionType = new GraphQLObjectType({
 export const rejectedDocumentIngestionType = new GraphQLObjectType({
   name: "RejectedDocumentIngestion",
   description: "A document which was rejected during ingestion",
+  interfaces: [documentIngestion],
   fields: {
     rejectionReason: {
       type: GraphQLNonNull(GraphQLString),

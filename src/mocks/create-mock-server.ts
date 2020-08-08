@@ -3,6 +3,7 @@ import { PULL_QUERY, INGEST_MUTATION } from "../sync-graphql";
 import { setupServer } from "msw/node";
 import { GraphQLError } from "graphql";
 import { Context } from "../types";
+import query from "../query";
 
 function createHandlers(context: Context) {
   return [

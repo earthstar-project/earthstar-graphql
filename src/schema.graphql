@@ -353,23 +353,31 @@ type WorkspaceExistsResult {
 }
 
 """The result of an attempted sync operation with a pub"""
-union SyncWithPubResult = SyncSuccess | WorkspaceNotFoundError
+union SyncWithPubResult = SyncSuccess | WorkspaceNotFoundError | SyncError | DetailedSyncSuccess
 
 """The result of a successful sync operation."""
 type SyncSuccess {
-  syncedWorkspace: Workspace
+  """The workspace which had documents synced from and to it"""
+  syncedWorkspace: Workspace!
 }
 
-enum SyncFormatEnum {
-  """The sync format for REST API Earthstar pubs"""
-  REST
-
-  """The sync format for GraphQL Earthstar pubs"""
-  GRAPHQL
+"""The result of a failed sync"""
+type SyncError {
+  """The reason for the error"""
+  reason: String!
 }
 
-"""The result of an attempt to ingest many documents"""
-union IngestDocumentsResult = WorkspaceNotFoundError | DocumentIngestionReport
+"""The result of a successful sync operation, with lots of detail"""
+type DetailedSyncSuccess {
+  """The workspace which had documents synced from and to it"""
+  syncedWorkspace: Workspace!
+
+  """A detailed report of the documents which were pushed to the pub. """
+  pushed: DocumentIngestionReport!
+
+  """A detailed report of the documents which were pulled from the pub"""
+  pulled: DocumentIngestionReport!
+}
 
 """A report of whether each document was ingested, ignored, or failed"""
 type DocumentIngestionReport {
@@ -390,25 +398,42 @@ type DocumentIngestionReport {
 union DocumentIngestionResult = AcceptedDocumentIngestion | IgnoredDocumentIngestion | RejectedDocumentIngestion
 
 """A document which was accepted during ingestion"""
-type AcceptedDocumentIngestion {
+type AcceptedDocumentIngestion implements DocumentIngestion {
   """The document which was accepted"""
   document: Document!
 }
 
+"""A report on how a document ingestion proceeded"""
+interface DocumentIngestion {
+  """The document in question"""
+  document: Document!
+}
+
 """A document which was ignored during ingestion"""
-type IgnoredDocumentIngestion {
+type IgnoredDocumentIngestion implements DocumentIngestion {
   """The document which was ignored"""
   document: Document!
 }
 
 """A document which was rejected during ingestion"""
-type RejectedDocumentIngestion {
+type RejectedDocumentIngestion implements DocumentIngestion {
   """The reason this document was rejection"""
   rejectionReason: String!
 
   """The document which failed to be ingested"""
   document: Document!
 }
+
+enum SyncFormatEnum {
+  """The sync format for REST API Earthstar pubs"""
+  REST
+
+  """The sync format for GraphQL Earthstar pubs"""
+  GRAPHQL
+}
+
+"""The result of an attempt to ingest many documents"""
+union IngestDocumentsResult = WorkspaceNotFoundError | DocumentIngestionReport
 
 """An input for describing an existing document"""
 input DocumentInput {

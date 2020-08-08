@@ -11,7 +11,11 @@ export type IngestMutation = {
         rejectedCount: number;
         documents: ({
             __typename: "AcceptedDocumentIngestion" | "IgnoredDocumentIngestion" | "RejectedDocumentIngestion";
-        })[];
+        } & ({
+            document: ((maximalFields));
+        }) & (({
+            rejectionReason: string;
+        })))[];
     })));
 };
 export type IngestMutationVariables = {
@@ -27,4 +31,19 @@ export type IngestMutationVariables = {
         signature: string;
         deleteAfter: number | null;
     })[];
+};
+export type maximalFields = {
+    content: string;
+    contentHash: string;
+    deleteAfter: number | null;
+    timestamp: number;
+    signature: string;
+    path: string;
+    format: string;
+    author: {
+        address: string;
+    };
+    workspace: {
+        address: string;
+    };
 };

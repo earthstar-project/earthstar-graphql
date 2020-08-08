@@ -55,3 +55,5 @@ export type ESAuthor = {
   fromWorkspace?: string;
 };
 export type ES4Document = Document;
+
+export type IngestResult = "ACCEPTED" | "IGNORED" | "REJECTED";
