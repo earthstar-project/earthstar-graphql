@@ -18,7 +18,7 @@ export type ContextBase = {
   storageMode: StorageType;
   workspaces: IStorage[];
   canAddWorkspace: AddWorkspaceCheck;
-  syncFilters: SyncFilters;
+  syncFilters: SyncFiltersArg;
 };
 
 export interface MemoryContext extends ContextBase {

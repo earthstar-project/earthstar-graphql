@@ -10,9 +10,30 @@ import {
 import syncGraphql from "./sync-graphql";
 import { createSchemaContext } from ".";
 import { Context } from "./types";
+import query from "./query";
+import { SyncMutation } from "./__generated__/sync-mutation";
 
 export const TEST_WORKSPACE_ADDR = "+test.a123";
 export const TEST_AUTHOR = generateAuthorKeypair("test") as AuthorKeypair;
+export const TEST_SYNC_MUTATION = /* GraphQL */ `
+  mutation SyncMutation($workspace: String!, $pubUrl: String!) {
+    syncWithPub(workspace: $workspace, pubUrl: $pubUrl, format: GRAPHQL) {
+      __typename
+      ... on DetailedSyncSuccess {
+        pushed {
+          ignoredCount
+          rejectedCount
+          acceptedCount
+        }
+        pulled {
+          ignoredCount
+          rejectedCount
+          acceptedCount
+        }
+      }
+    }
+  }
+`;
 
 function setupTestServerContext(): Context {
   const testServerContext = createSchemaContext("MEMORY", {
@@ -91,23 +112,59 @@ afterAll(() => {
 });
 
 test("Syncs", async () => {
-  const storage = new StorageMemory([ValidatorEs4], TEST_WORKSPACE_ADDR);
-  const author = generateAuthorKeypair("test") as AuthorKeypair;
+  const ctx = createSchemaContext("MEMORY", {
+    workspaceAddresses: [TEST_WORKSPACE_ADDR],
+  });
 
-  const doc = {
-    format: "es.4",
-    workspace: TEST_WORKSPACE_ADDR,
-    author: author.address,
-    path: "/test/4",
-    content: "A local document",
-    timestamp: Date.now() * 1000,
-    signature: sign(author, "A local document"),
-  };
+  await query(
+    /* GraphQL */ `
+      mutation SetMutation(
+        $author: AuthorInput!
+        $document: NewDocumentInput!
+        $workspace: String!
+      ) {
+        set(author: $author, document: $document, workspace: $workspace) {
+          __typename
+          ... on DocumentRejectedError {
+            reason
+          }
+        }
+      }
+    `,
+    {
+      author: generateAuthorKeypair("test") as AuthorKeypair,
+      document: {
+        path: "/test/4",
+        content: "A local document",
+      },
+      workspace: TEST_WORKSPACE_ADDR,
+    },
+    ctx
+  );
 
-  storage.set(author, doc);
+  const res = await query<SyncMutation>(
+    TEST_SYNC_MUTATION,
+    {
+      workspace: TEST_WORKSPACE_ADDR,
+      pubUrl: "https://test.server/graphql",
+    },
+    ctx
+  );
 
-  await syncGraphql(storage, "https://test.server/graphql", {});
+  expect(res.data?.syncWithPub.pulled).toEqual({
+    acceptedCount: 4,
+    ignoredCount: 0,
+    rejectedCount: 0,
+  });
+  expect(res.data?.syncWithPub.pushed).toEqual({
+    acceptedCount: 1,
+    ignoredCount: 0,
+    rejectedCount: 0,
+  });
 
+  const storage = ctx.workspaces[0];
+
+  expect(res.data).toBeDefined();
   expect(storage.documents().length).toBe(5);
   expect(storage.documents().map((doc) => doc.path)).toEqual([
     "/test/1",
@@ -118,9 +175,6 @@ test("Syncs", async () => {
   ]);
   expect(storage.documents({ path: "/test/4" })[0].content).toEqual(
     "A local document"
-  );
-  expect(storage.documents({ path: "/test/4" })[0].author).toEqual(
-    author.address
   );
 });
 

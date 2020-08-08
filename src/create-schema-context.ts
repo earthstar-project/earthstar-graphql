@@ -22,11 +22,6 @@ type SqliteContextOptions = {
 
 type ContextOptions = CommonContextOptions | SqliteContextOptions;
 
-const EMPTY_SYNC_FILTERS = {
-  pathPrefixes: [],
-  versionsByAuthors: [],
-};
-
 export default function createSchemaContext(
   mode: "MEMORY",
   options: CommonContextOptions
@@ -49,7 +44,6 @@ export default function createSchemaContext(
         ? options.canAddWorkspace
         : () => true,
       syncFilters: {
-        ...EMPTY_SYNC_FILTERS,
         ...options.syncFilters,
       },
     };
@@ -70,7 +64,6 @@ export default function createSchemaContext(
       : () => true,
     getWorkspacePath: (options as SqliteContextOptions).getWorkspacePath,
     syncFilters: {
-      ...EMPTY_SYNC_FILTERS,
       ...options.syncFilters,
     },
   };

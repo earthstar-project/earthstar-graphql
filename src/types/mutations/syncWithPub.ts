@@ -17,7 +17,6 @@ import { workspaceType } from "../object-types/workspace";
 import { Context } from "../../types";
 import syncGraphql from "../../sync-graphql";
 import { syncLocalAndHttp, isErr } from "earthstar";
-import { doc } from "prettier";
 
 export const syncFormatEnum = new GraphQLEnumType({
   name: "SyncFormatEnum",

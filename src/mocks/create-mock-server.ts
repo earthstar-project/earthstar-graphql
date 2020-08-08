@@ -4,6 +4,7 @@ import { setupServer } from "msw/node";
 import { GraphQLError } from "graphql";
 import { Context } from "../types";
 import query from "../query";
+import { TEST_SYNC_MUTATION } from "../sync-graphql.test";
 
 function createHandlers(context: Context) {
   return [
@@ -19,6 +20,19 @@ function createHandlers(context: Context) {
     graphql.mutation("IngestMutation", async (req, res, ctx) => {
       const { data, errors } = await query(
         INGEST_MUTATION,
+        req.variables,
+        context
+      );
+
+      if (errors) {
+        return res(ctx.errors(errors as Partial<GraphQLError>[]));
+      }
+
+      return res(ctx.data(data));
+    }),
+    graphql.mutation("SyncMutation", async (req, res, ctx) => {
+      const { data, errors } = await query(
+        TEST_SYNC_MUTATION,
         req.variables,
         context
       );
