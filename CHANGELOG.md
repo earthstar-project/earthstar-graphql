@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.1
+
+### Fixes
+
+- Fixed an issue where a schema context configured with no sync filters would wrongly respond to queries for its sync filters as empty arrays.
+  - I think these two should be semantically different: an undefined sync filter means the pub has no preference on documents, whereas an empty one would mean the pub is accepting nothing. (???)
+
 ## 4.0.0
 
 ### Breaking
