@@ -149,10 +149,13 @@ export default async function syncGraphql(
     })
   );
 
-  const documentsToPush = getWorkspaceDocuments(
-    storage,
-    pullJson.data.syncFilters
-  );
+  const documentsToPush = getWorkspaceDocuments(storage, {
+    filters: {
+      pathPrefixes: pullJson.data.syncFilters.pathPrefixes || undefined,
+      versionsByAuthors:
+        pullJson.data.syncFilters.versionsByAuthors || undefined,
+    },
+  });
 
   const ingestRes = await fetch(graphqlUrl, {
     method: "POST",

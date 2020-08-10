@@ -14,6 +14,7 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLList,
+  GraphQLBoolean,
 } from "graphql";
 import { Context } from "../types";
 import { authorType, authorSortEnum } from "./object-types/author";
@@ -110,11 +111,18 @@ export const queryType = new GraphQLObjectType<{}, Context>({
           description:
             "A list of author addresses of authors who have created versions of these documents",
         },
+        includeDeleted: {
+          type: GraphQLBoolean,
+          description: "Whether to include deleted documents or not",
+        },
       },
       resolve(_root, args, ctx) {
         const docs = getAllDocuments(ctx, {
-          pathPrefixes: args.pathPrefixes,
-          versionsByAuthors: args.versionsByAuthors,
+          filters: {
+            pathPrefixes: args.pathPrefixes,
+            versionsByAuthors: args.versionsByAuthors,
+          },
+          includeDeleted: args.includeDeleted,
         });
         return sortDocuments(docs, args.sortedBy);
       },

@@ -12,6 +12,7 @@ import {
   GraphQLString,
   GraphQLList,
   GraphQLID,
+  GraphQLBoolean,
 } from "graphql";
 import { nodeInterface, encodeToId } from "../interfaces/node";
 import { ESAuthor, Context } from "../../types";
@@ -83,10 +84,17 @@ export const authorType: GraphQLObjectType = new GraphQLObjectType<
           description:
             "Paths which all returned docs must have at the beginning of their paths",
         },
+        includeDeleted: {
+          type: GraphQLBoolean,
+          description: "Whether to include deleted documents or not",
+        },
       },
       resolve(root, args, ctx) {
         return sortDocuments(
-          getAuthorDocuments(root, ctx, { pathPrefixes: args.pathPrefixes }),
+          getAuthorDocuments(root, ctx, {
+            filters: { pathPrefixes: args.pathPrefixes },
+            includeDeleted: args.includeDeleted,
+          }),
           args.sortedBy
         );
       },

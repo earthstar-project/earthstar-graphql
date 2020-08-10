@@ -87,10 +87,10 @@ export async function initWorkspace(address: string, ctx: Context) {
 
 export function getAllDocuments(
   ctx: Context,
-  filters: SyncFiltersArg
+  options?: { filters?: SyncFiltersArg; includeDeleted?: boolean }
 ): Document[] {
   return ctx.workspaces.flatMap((workspace) => {
-    return getWorkspaceDocuments(workspace, filters);
+    return getWorkspaceDocuments(workspace, options);
   });
 }
 
@@ -141,7 +141,10 @@ export function getAllAuthors(ctx: Context) {
 export function getAuthorDocuments(
   author: ESAuthor,
   ctx: Context,
-  filters: Pick<SyncFiltersArg, "pathPrefixes">
+  options?: {
+    filters?: Pick<SyncFiltersArg, "pathPrefixes">;
+    includeDeleted?: boolean;
+  }
 ): Document[] {
   const workspaces = author.fromWorkspace
     ? ctx.workspaces.filter((ws) => author.fromWorkspace === ws.workspace)
@@ -152,7 +155,7 @@ export function getAuthorDocuments(
       return [];
     }
 
-    return getWorkspaceDocuments(workspace, filters);
+    return getWorkspaceDocuments(workspace, options);
   });
 }
 
@@ -166,7 +169,7 @@ export function authorLastPublishedTimestamp(
   author: ESAuthor,
   ctx: Context
 ): number {
-  const documents = getAuthorDocuments(author, ctx, {});
+  const documents = getAuthorDocuments(author, ctx);
 
   documents.sort((aDoc, bDoc) => {
     return aDoc.timestamp > bDoc.timestamp ? -1 : 1;
@@ -241,29 +244,50 @@ export function getWorkspaceAuthors(workspace: IStorage) {
     .map((address) => ({ address, fromWorkspace: workspace.workspace }));
 }
 
+function includeDeletedFilter(includeDeleted: boolean) {
+  return (doc: Document) => {
+    return includeDeleted ? true : doc.content !== "";
+  };
+}
+
 export function getWorkspaceDocuments(
   workspace: IStorage,
-  filters: SyncFiltersArg
+  options?: {
+    filters?: SyncFiltersArg;
+    includeDeleted?: boolean;
+  }
 ): Document[] {
-  const isFiltered = filters.pathPrefixes || filters.versionsByAuthors;
-
-  if (!isFiltered) {
-    return workspace.documents();
+  if (!options) {
+    return workspace.documents().filter(includeDeletedFilter(false));
   }
 
-  const byAuthorDocuments = filters.versionsByAuthors
-    ? filters.versionsByAuthors.flatMap((author) => {
-        return workspace.documents({ versionsByAuthor: author });
-      })
-    : [];
+  const { filters, includeDeleted } = options;
 
-  const prefixPathDocuments = filters.pathPrefixes
-    ? filters.pathPrefixes.flatMap((pathPrefix) => {
-        return workspace.documents({ pathPrefix });
-      })
-    : [];
+  const isFiltered = filters
+    ? filters.pathPrefixes || filters.versionsByAuthors
+    : false;
 
-  return [...byAuthorDocuments, ...prefixPathDocuments];
+  if (!isFiltered) {
+    return workspace.documents().filter(includeDeletedFilter(!!includeDeleted));
+  }
+
+  const byAuthorDocuments =
+    filters && filters.versionsByAuthors
+      ? filters.versionsByAuthors.flatMap((author) => {
+          return workspace.documents({ versionsByAuthor: author });
+        })
+      : [];
+
+  const prefixPathDocuments =
+    filters && filters.pathPrefixes
+      ? filters.pathPrefixes.flatMap((pathPrefix) => {
+          return workspace.documents({ pathPrefix });
+        })
+      : [];
+
+  return [...byAuthorDocuments, ...prefixPathDocuments].filter(
+    includeDeletedFilter(!!includeDeleted)
+  );
 }
 
 export function workspaceLastActivityTimestamp(workspace: IStorage): number {

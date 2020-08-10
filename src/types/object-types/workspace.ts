@@ -14,6 +14,7 @@ import {
   GraphQLString,
   GraphQLInt,
   GraphQLList,
+  GraphQLBoolean,
 } from "graphql";
 import { nodeInterface, encodeToId } from "../interfaces/node";
 import { ESWorkspace, Context } from "../../types";
@@ -138,12 +139,19 @@ export const workspaceType: GraphQLObjectType = new GraphQLObjectType<
           description:
             "A list of author addresses of authors who have created versions of these documents",
         },
+        includeDeleted: {
+          type: GraphQLBoolean,
+          description: "Whether to include deleted documents or not",
+        },
       },
       resolve(root, args) {
         return sortDocuments(
           getWorkspaceDocuments(root, {
-            pathPrefixes: args.pathPrefixes,
-            versionsByAuthors: args.versionsByAuthors,
+            filters: {
+              pathPrefixes: args.pathPrefixes,
+              versionsByAuthors: args.versionsByAuthors,
+            },
+            includeDeleted: args.includeDeleted,
           }),
           args.sortedBy
         );

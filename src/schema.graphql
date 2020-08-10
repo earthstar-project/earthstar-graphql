@@ -28,6 +28,9 @@ type Query {
     A list of author addresses of authors who have created versions of these documents
     """
     versionsByAuthors: [String!]
+
+    """Whether to include deleted documents or not"""
+    includeDeleted: Boolean
   ): [Document!]!
 
   """Look up a workspace using its path, e.g. +gardening.123456"""
@@ -81,6 +84,9 @@ type Author implements Node {
     Paths which all returned docs must have at the beginning of their paths
     """
     pathPrefixes: [String!]
+
+    """Whether to include deleted documents or not"""
+    includeDeleted: Boolean
   ): [Document!]!
 
   """Return a list of workspaces this author has published documents to"""
@@ -168,6 +174,9 @@ type Workspace implements Node {
     A list of author addresses of authors who have created versions of these documents
     """
     versionsByAuthors: [String!]
+
+    """Whether to include deleted documents or not"""
+    includeDeleted: Boolean
   ): [Document!]!
 }
 

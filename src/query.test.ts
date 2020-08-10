@@ -1,6 +1,7 @@
 import query from "./query";
 import createSchemaContext from "./create-schema-context";
 import { generateAuthorKeypair, sign, verify, AuthorKeypair } from "earthstar";
+import { DeletedDocumentsQuery } from "./__generated__/deleted-documents-query";
 
 export const TEST_WORKSPACE_ADDR = "+test.a123";
 
@@ -10,12 +11,14 @@ describe("query", () => {
       workspaceAddresses: [TEST_WORKSPACE_ADDR],
     });
 
-    const TEST_QUERY = `query TestQuery {
-          workspaces {
-              address
-              name
-          }
-      }`;
+    const TEST_QUERY = /* GraphQL */ `
+      query TestQuery {
+        workspaces {
+          address
+          name
+        }
+      }
+    `;
 
     const result = await query(TEST_QUERY, {}, ctx);
 
@@ -37,21 +40,23 @@ describe("query", () => {
       workspace: TEST_WORKSPACE_ADDR,
     };
 
-    const TEST_MUTATION = `mutation TestMutation($author: AuthorInput!, $document: NewDocumentInput!, $workspace: String!) {
-          set(
-              author: $author,
-              document: $document,
-              workspace: $workspace
-          ) {
-              ... on SetDataSuccessResult {
-                  document {
-                      ... on ES4Document {
-                          content
-                      }
-                  }
+    const TEST_MUTATION = /* GraphQL */ `
+      mutation TestMutation(
+        $author: AuthorInput!
+        $document: NewDocumentInput!
+        $workspace: String!
+      ) {
+        set(author: $author, document: $document, workspace: $workspace) {
+          ... on SetDataSuccessResult {
+            document {
+              ... on ES4Document {
+                content
               }
+            }
           }
-      }`;
+        }
+      }
+    `;
 
     await query(TEST_MUTATION, variables, ctx);
 
@@ -72,16 +77,18 @@ describe("query", () => {
       author: null,
     };
 
-    const ADD_MUTATION = `mutation AddMutation($workspaceAddress: String!, $author: AuthorInput) {
-      addWorkspace(workspaceAddress: $workspaceAddress, author: $author) {
-        __typename
-        ... on WorkspaceAddedResult {
-          workspace {
-            name
+    const ADD_MUTATION = /* GraphQL */ `
+      mutation AddMutation($workspaceAddress: String!, $author: AuthorInput) {
+        addWorkspace(workspaceAddress: $workspaceAddress, author: $author) {
+          __typename
+          ... on WorkspaceAddedResult {
+            workspace {
+              name
+            }
           }
         }
       }
-    }`;
+    `;
 
     await query(ADD_MUTATION, variables, ctx);
 
@@ -135,4 +142,67 @@ describe("query", () => {
       )
     ).toBeDefined();
   });
+});
+
+test("Does not include deleted documents by default", async () => {
+  const ctx = createSchemaContext("MEMORY", {
+    workspaceAddresses: [TEST_WORKSPACE_ADDR],
+  });
+
+  const variables = {
+    author: generateAuthorKeypair("test"),
+    document: { path: "/deleted", content: "" },
+    workspace: TEST_WORKSPACE_ADDR,
+  };
+
+  const TEST_MUTATION = /* GraphQL */ `
+    mutation TestMutation(
+      $author: AuthorInput!
+      $document: NewDocumentInput!
+      $workspace: String!
+    ) {
+      set(author: $author, document: $document, workspace: $workspace) {
+        __typename
+      }
+    }
+  `;
+
+  await query(TEST_MUTATION, variables, ctx);
+
+  const TEST_QUERY = /* GraphQL */ `
+    query DeletedDocumentsQuery($includeDeleted: Boolean!) {
+      documents(includeDeleted: $includeDeleted) {
+        __typename
+      }
+      workspaces {
+        documents(includeDeleted: $includeDeleted) {
+          __typename
+        }
+      }
+      authors {
+        documents(includeDeleted: $includeDeleted) {
+          __typename
+        }
+      }
+    }
+  `;
+
+  const res = await query<DeletedDocumentsQuery>(
+    TEST_QUERY,
+    { includeDeleted: false },
+    ctx
+  );
+
+  const includingDeletedRes = await query<DeletedDocumentsQuery>(
+    TEST_QUERY,
+    { includeDeleted: true },
+    ctx
+  );
+
+  expect(res.data?.documents.length).toEqual(0);
+  expect(res.data?.workspaces[0].documents.length).toEqual(0);
+  expect(res.data?.authors[0].documents.length).toEqual(0);
+  expect(includingDeletedRes.data?.documents.length).toEqual(1);
+  expect(includingDeletedRes.data?.workspaces[0].documents.length).toEqual(1);
+  expect(includingDeletedRes.data?.authors[0].documents.length).toEqual(1);
 });

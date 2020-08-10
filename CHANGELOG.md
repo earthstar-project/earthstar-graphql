@@ -1,5 +1,11 @@
 # Changelog
 
+## next
+
+### Improvements
+
+- Added a `includeDeleted` field to all document querying fields, which returns deleted documents (which as of now is when a document's content is an empty string) when true.
+
 ## 4.0.1
 
 ### Fixes
