@@ -50,12 +50,12 @@ type SyncFilters {
   """
   Describes which paths this peer wants prefixed to documents synced to it
   """
-  pathPrefixes: [String!]!
+  pathPrefixes: [String!]
 
   """
   Describes which authors this peer wants to have participated in documents synced to it
   """
-  versionsByAuthors: [String!]!
+  versionsByAuthors: [String!]
 }
 
 """A person identified by a public key"""

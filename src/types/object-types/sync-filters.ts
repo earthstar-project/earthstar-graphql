@@ -13,19 +13,19 @@ export const syncFiltersObject = new GraphQLObjectType<SyncFilters, Context>({
     "A description of the kinds of documents this peer is interested in",
   fields: {
     pathPrefixes: {
-      type: GraphQLNonNull(GraphQLList(GraphQLNonNull(GraphQLString))),
+      type: GraphQLList(GraphQLNonNull(GraphQLString)),
       description:
         "Describes which paths this peer wants prefixed to documents synced to it",
       resolve(root) {
-        return root.pathPrefixes || [];
+        return root.pathPrefixes;
       },
     },
     versionsByAuthors: {
-      type: GraphQLNonNull(GraphQLList(GraphQLNonNull(GraphQLString))),
+      type: GraphQLList(GraphQLNonNull(GraphQLString)),
       description:
         "Describes which authors this peer wants to have participated in documents synced to it",
       resolve(root) {
-        return root.versionsByAuthors || [];
+        return root.versionsByAuthors;
       },
     },
   },
