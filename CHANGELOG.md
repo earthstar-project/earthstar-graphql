@@ -1,6 +1,6 @@
 # Changelog
 
-## next
+## 4.1.0
 
 ### Improvements
 
