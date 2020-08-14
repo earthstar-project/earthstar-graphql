@@ -1,10 +1,10 @@
 # Changelog
 
-## Next
+## 4.1.1
 
 ### Fixes
 
-- Fixed an issue where deleted documents would not be synced during push or pull from GraphQL pubs.
+- Fixed an issue where deleted documents would not be synced during push or pull.
 
 ## 4.1.0
 
