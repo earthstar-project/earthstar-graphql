@@ -20,6 +20,7 @@ export const PULL_QUERY = /* GraphQL */ `
       documents(
         versionsByAuthors: $versionsByAuthors
         pathPrefixes: $pathPrefixes
+        includeDeleted: true
       ) {
         ... on ES4Document {
           content
@@ -155,6 +156,7 @@ export default async function syncGraphql(
       versionsByAuthors:
         pullJson.data.syncFilters.versionsByAuthors || undefined,
     },
+    includeDeleted: true,
   });
 
   const ingestRes = await fetch(graphqlUrl, {

@@ -81,6 +81,15 @@ function setupTestServerContext(): Context {
       timestamp: Date.now() * 1000 - 20000,
       signature: "",
     },
+    {
+      format: "es.4",
+      workspace: TEST_WORKSPACE_ADDR,
+      author: TEST_AUTHOR.address,
+      path: "/test/trash",
+      content: "",
+      timestamp: Date.now() * 1000 - 20000,
+      signature: "",
+    },
   ];
 
   docs.forEach((doc) => {
@@ -152,7 +161,7 @@ test("Syncs", async () => {
   );
 
   expect(res.data?.syncWithPub.pulled).toEqual({
-    acceptedCount: 4,
+    acceptedCount: 5,
     ignoredCount: 0,
     rejectedCount: 0,
   });
@@ -165,12 +174,13 @@ test("Syncs", async () => {
   const storage = ctx.workspaces[0];
 
   expect(res.data).toBeDefined();
-  expect(storage.documents().length).toBe(5);
+  expect(storage.documents().length).toBe(6);
   expect(storage.documents().map((doc) => doc.path)).toEqual([
     "/test/1",
     "/test/2",
     "/test/3",
     "/test/4",
+    "/test/trash",
     "/wiki/door",
   ]);
   expect(storage.documents({ path: "/test/4" })[0].content).toEqual(
@@ -221,7 +231,7 @@ test("Filter Syncs", async () => {
       storage.set(author, doc);
     });
 
-  const result = await syncGraphql(storage, "https://test.server/graphql", {
+  await syncGraphql(storage, "https://test.server/graphql", {
     pathPrefixes: ["/wiki"],
   });
 
@@ -241,6 +251,86 @@ test("Filter Syncs", async () => {
     "/test/2",
     "/test/3",
     "/test/4",
+    "/test/trash",
     "/wiki/door",
   ]);
+});
+
+test("also sends deleted posts", async () => {
+  const ctx = createSchemaContext("MEMORY", {
+    workspaceAddresses: [TEST_WORKSPACE_ADDR],
+  });
+
+  const SET_QUERY = /* GraphQL */ `
+    mutation SetMutation(
+      $author: AuthorInput!
+      $document: NewDocumentInput!
+      $workspace: String!
+    ) {
+      set(author: $author, document: $document, workspace: $workspace) {
+        __typename
+        ... on DocumentRejectedError {
+          reason
+        }
+      }
+    }
+  `;
+
+  await query(
+    SET_QUERY,
+    {
+      author: generateAuthorKeypair("test") as AuthorKeypair,
+      document: {
+        path: "/test/todelete",
+        content: "A local document",
+      },
+      workspace: TEST_WORKSPACE_ADDR,
+    },
+    ctx
+  );
+
+  await query<SyncMutation>(
+    TEST_SYNC_MUTATION,
+    {
+      workspace: TEST_WORKSPACE_ADDR,
+      pubUrl: "https://test.server/graphql",
+    },
+    ctx
+  );
+
+  // expect new doc to be on the server
+  const pubDocPaths = testServerContext.workspaces[0].documents().map((doc) => {
+    return doc.path;
+  });
+
+  expect(pubDocPaths.includes("/test/todelete")).toBeTruthy();
+
+  await query(
+    SET_QUERY,
+    {
+      author: generateAuthorKeypair("test") as AuthorKeypair,
+      document: {
+        path: "/test/todelete",
+        content: "",
+      },
+      workspace: TEST_WORKSPACE_ADDR,
+    },
+    ctx
+  );
+
+  await query<SyncMutation>(
+    TEST_SYNC_MUTATION,
+    {
+      workspace: TEST_WORKSPACE_ADDR,
+      pubUrl: "https://test.server/graphql",
+    },
+    ctx
+  );
+
+  // expect new doc to be on the server
+  const deletedDoc = testServerContext.workspaces[0]
+    .documents()
+    .find((doc) => doc.path === "/test/todelete");
+
+  expect(deletedDoc?.content).toBe("");
 });
