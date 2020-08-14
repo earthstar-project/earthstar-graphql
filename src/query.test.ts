@@ -2,6 +2,7 @@ import query from "./query";
 import createSchemaContext from "./create-schema-context";
 import { generateAuthorKeypair, sign, verify, AuthorKeypair } from "earthstar";
 import { DeletedDocumentsQuery } from "./__generated__/deleted-documents-query";
+import { LongNameQuery } from "./__generated__/long-name-query";
 
 export const TEST_WORKSPACE_ADDR = "+test.a123";
 
@@ -205,4 +206,49 @@ test("Does not include deleted documents by default", async () => {
   expect(includingDeletedRes.data?.documents.length).toEqual(1);
   expect(includingDeletedRes.data?.workspaces[0].documents.length).toEqual(1);
   expect(includingDeletedRes.data?.authors[0].documents.length).toEqual(1);
+});
+
+test("returns user long names", async () => {
+  const ctx = createSchemaContext("MEMORY", {
+    workspaceAddresses: ["+names.a1", "+nonames.a1"],
+  });
+
+  const TEST_AUTHOR = generateAuthorKeypair("test") as AuthorKeypair;
+
+  ctx.workspaces
+    .find((ws) => ws.workspace === "+names.a1")
+    ?.set(TEST_AUTHOR, {
+      content: "the spontaneous one",
+      path: `/about/${TEST_AUTHOR.address}/name`,
+      format: "es.4",
+    });
+
+  ctx.workspaces
+    .find((ws) => ws.workspace === "+nonames.a1")
+    ?.set(TEST_AUTHOR, {
+      content: "whatever",
+      path: "/test",
+      format: "es.4",
+    });
+
+  const NAMES_QUERY = /* GraphQL */ `
+    query LongNameQuery {
+      authors {
+        longName
+      }
+      workspaces {
+        authors {
+          longName
+        }
+      }
+    }
+  `;
+
+  const res = await query<LongNameQuery>(NAMES_QUERY, {}, ctx);
+
+  expect(res.data?.authors[0].longName).toBeNull();
+  expect(res.data?.workspaces[1].authors[0].longName).toBe(
+    "the spontaneous one"
+  );
+  expect(res.data?.workspaces[0].authors[0].longName).toBeNull();
 });

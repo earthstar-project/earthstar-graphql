@@ -4,6 +4,7 @@ import {
   getAuthorWorkspaces,
   sortDocuments,
   sortWorkspaces,
+  getAuthorLongName,
 } from "../../util";
 import {
   GraphQLEnumType,
@@ -59,6 +60,26 @@ export const authorType: GraphQLObjectType = new GraphQLObjectType<
         "The author's short name without their public key, e.g. suzy",
       resolve(root) {
         return getAuthorShortname(root.address);
+      },
+    },
+    longName: {
+      type: GraphQLString,
+      description:
+        "The author's display name. This is particular to a given workspace.",
+      resolve(root, _args, ctx) {
+        if (!root.fromWorkspace) {
+          return null;
+        }
+
+        const maybeStorage = ctx.workspaces.find(
+          (ws) => ws.workspace === root.fromWorkspace
+        );
+
+        if (!maybeStorage) {
+          return null;
+        }
+
+        return getAuthorLongName(root.address, maybeStorage) || null;
       },
     },
     address: {

@@ -68,6 +68,9 @@ type Author implements Node {
   """The author's short name without their public key, e.g. suzy"""
   shortName: String!
 
+  """The author's display name. This is particular to a given workspace."""
+  longName: String
+
   """
   The author's full address, made of short name and public key, e.g. @suzy.6efJ8v8rtwoBxfN5MKeTF2Qqyf6zBmwmv8oAbendBZHP
   """

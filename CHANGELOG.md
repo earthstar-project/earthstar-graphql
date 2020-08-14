@@ -1,5 +1,11 @@
 # Changelog
 
+## next
+
+### Improvements
+
+- Added a `longName` field to the `Author` type, which returns the display name set by the author at a particular path in a workspace (see https://github.com/earthstar-project/earthstar/blob/master/docs/vocabulary.md#author)
+
 ## 4.1.1
 
 ### Fixes
