@@ -4,7 +4,7 @@ import {
   getAuthorWorkspaces,
   sortDocuments,
   sortWorkspaces,
-  getAuthorLongName,
+  getAuthorDisplayName,
 } from "../../util";
 import {
   GraphQLEnumType,
@@ -62,7 +62,7 @@ export const authorType: GraphQLObjectType = new GraphQLObjectType<
         return getAuthorShortname(root.address);
       },
     },
-    longName: {
+    displayName: {
       type: GraphQLString,
       description:
         "The author's display name. This is particular to a given workspace.",
@@ -79,7 +79,7 @@ export const authorType: GraphQLObjectType = new GraphQLObjectType<
           return null;
         }
 
-        return getAuthorLongName(root.address, maybeStorage) || null;
+        return getAuthorDisplayName(root.address, maybeStorage) || null;
       },
     },
     address: {

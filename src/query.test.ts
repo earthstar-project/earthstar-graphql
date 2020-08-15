@@ -234,11 +234,12 @@ test("returns user long names", async () => {
   const NAMES_QUERY = /* GraphQL */ `
     query LongNameQuery {
       authors {
-        longName
+        displayName
       }
       workspaces {
+        address
         authors {
-          longName
+          displayName
         }
       }
     }
@@ -246,9 +247,13 @@ test("returns user long names", async () => {
 
   const res = await query<LongNameQuery>(NAMES_QUERY, {}, ctx);
 
-  expect(res.data?.authors[0].longName).toBeNull();
-  expect(res.data?.workspaces[1].authors[0].longName).toBe(
-    "the spontaneous one"
-  );
-  expect(res.data?.workspaces[0].authors[0].longName).toBeNull();
+  expect(res.data?.authors[0].displayName).toBeNull();
+  expect(
+    res.data?.workspaces.find((ws) => ws.address === "+names.a1")?.authors[0]
+      .displayName
+  ).toBe("the spontaneous one");
+  expect(
+    res.data?.workspaces.find((ws) => ws.address === "+nonames.a1")?.authors[0]
+      .displayName
+  ).toBeNull();
 });

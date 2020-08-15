@@ -116,12 +116,12 @@ export function getAuthor(address: string, ctx: Context) {
   );
 }
 
-export function getLongNamePath(addr: string) {
+export function getDisplayNamePath(addr: string) {
   return `/about/${addr}/name`;
 }
 
-export function getAuthorLongName(address: string, workspace: IStorage) {
-  return workspace.getContent(getLongNamePath(address));
+export function getAuthorDisplayName(address: string, workspace: IStorage) {
+  return workspace.getContent(getDisplayNamePath(address));
 }
 
 const authorNameRegex = /@(.*)\./;
