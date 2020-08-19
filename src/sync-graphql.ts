@@ -231,3 +231,23 @@ export default async function syncGraphql(
     },
   };
 }
+
+export async function isGraphQlPub(pubUrl: string): Promise<boolean> {
+  const pullRes = await fetch(pubUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: /* GraphQL */ `
+        {
+          __schema {
+            queryType {
+              name
+            }
+          }
+        }
+      `,
+    }),
+  });
+
+  return pullRes.status === 200;
+}

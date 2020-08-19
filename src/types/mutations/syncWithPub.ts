@@ -15,20 +15,9 @@ import {
 } from "./common";
 import { workspaceType } from "../object-types/workspace";
 import { Context } from "../../types";
-import syncGraphql from "../../sync-graphql";
+import syncGraphql, { isGraphQlPub } from "../../sync-graphql";
 import { syncLocalAndHttp, isErr } from "earthstar";
-
-export const syncFormatEnum = new GraphQLEnumType({
-  name: "SyncFormatEnum",
-  values: {
-    REST: {
-      description: "The sync format for REST API Earthstar pubs",
-    },
-    GRAPHQL: {
-      description: "The sync format for GraphQL Earthstar pubs",
-    },
-  },
-});
+import { initWorkspace } from "../../util";
 
 export const detailedSyncSuccessType = new GraphQLObjectType({
   name: "DetailedSyncSuccess",
@@ -103,27 +92,30 @@ export const syncWithPubField: GraphQLFieldConfig<{}, Context> = {
       type: GraphQLNonNull(GraphQLString),
       description: "The URL of the pub to sync with",
     },
-    format: {
-      type: syncFormatEnum,
-      defaultValue: "REST",
-      description: "The format for this sync operation to take",
-    },
   },
   async resolve(_root, args, ctx) {
     const maybeStorage = ctx.workspaces.find(
       (wsStorage) => wsStorage.workspace === args.workspace
     );
 
-    if (maybeStorage === undefined) {
+    if (maybeStorage === undefined && !ctx.canAddWorkspace(args.workspace)) {
       return {
         __type: workspaceNotFoundErrorObject,
         address: args.workspace,
       };
     }
 
-    if (args.format === "GRAPHQL") {
+    const storageToUse = maybeStorage
+      ? maybeStorage
+      : await initWorkspace(args.workspace, ctx);
+
+    const shouldUseGraphqlSync = !!args.format
+      ? args.format === "GRAPHQL"
+      : await isGraphQlPub(args.pubUrl);
+
+    if (shouldUseGraphqlSync) {
       const result = await syncGraphql(
-        maybeStorage,
+        storageToUse,
         args.pubUrl,
         ctx.syncFilters
       );
@@ -134,6 +126,8 @@ export const syncWithPubField: GraphQLFieldConfig<{}, Context> = {
           reason: result.message,
         };
       }
+
+      ctx.workspaces.push(storageToUse);
 
       return {
         __type: detailedSyncSuccessType,
@@ -153,7 +147,7 @@ export const syncWithPubField: GraphQLFieldConfig<{}, Context> = {
         pulled: result.pulled,
       };
     }
-    const result = await syncLocalAndHttp(maybeStorage, args.pubUrl);
+    const result = await syncLocalAndHttp(storageToUse, args.pubUrl);
 
     if (isErr(result)) {
       return {
@@ -162,9 +156,11 @@ export const syncWithPubField: GraphQLFieldConfig<{}, Context> = {
       };
     }
 
+    ctx.workspaces.push(storageToUse);
+
     return {
       __type: syncSuccessType,
-      syncedWorkspace: maybeStorage,
+      syncedWorkspace: storageToUse,
     };
   },
 };

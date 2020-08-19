@@ -1,5 +1,16 @@
 # Changelog
 
+## next
+
+### Breaking
+
+- The `format` arg on the `syncWithPub` mutation has been removed as whether a pub is a GraphQL or REST pub is now automatically determined.
+
+### Features
+
+- Added a `isGraphQlPub` export which can be used to determine whether the pub at a URL is a GraphQL pub or not.
+- If the workspace passed to a `syncWithPub` mutation does not exist, `syncWithPub` will create it if it passes the configurable `canAddWorkspace` check.
+
 ## 4.2.0
 
 ### Improvements

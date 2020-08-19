@@ -17,7 +17,7 @@ export const TEST_WORKSPACE_ADDR = "+test.a123";
 export const TEST_AUTHOR = generateAuthorKeypair("test") as AuthorKeypair;
 export const TEST_SYNC_MUTATION = /* GraphQL */ `
   mutation SyncMutation($workspace: String!, $pubUrl: String!) {
-    syncWithPub(workspace: $workspace, pubUrl: $pubUrl, format: GRAPHQL) {
+    syncWithPub(workspace: $workspace, pubUrl: $pubUrl) {
       __typename
       ... on DetailedSyncSuccess {
         pushed {

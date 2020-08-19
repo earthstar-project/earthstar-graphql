@@ -43,6 +43,17 @@ function createHandlers(context: Context) {
 
       return res(ctx.data(data));
     }),
+    graphql.query("isGqlQuery", (req, res, ctx) => {
+      return res(
+        ctx.data({
+          __schema: {
+            queryType: {
+              name: "Query",
+            },
+          },
+        })
+      );
+    }),
   ];
 }
 

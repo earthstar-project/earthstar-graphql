@@ -124,3 +124,11 @@ function syncGraphql(
 A function you can use to sync documents from a remote GraphQL server to a local `IStorage` instance. It also takes filter options, so you can selectively sync documents. The `IStorage` is mutated in place.
 
 The sync result contains data about the documents which were pushed and pulled, and whether they were accepted, ignored or rejected.
+
+### `isGraphQlPub`
+
+```ts
+function isGraphQlPub(pubUrl: string): Promise<boolean>;
+```
+
+Determines whether the pub at the given URL supports earthstar graphql queries or not.
