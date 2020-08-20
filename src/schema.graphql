@@ -333,6 +333,9 @@ input NewDocumentInput {
 
   """The path of the document, e.g. /spices/pepper"""
   path: String!
+
+  """A timestamp representing the time this document should be deleted by"""
+  deleteAfter: Float = null
 }
 
 enum DocumentFormat {
