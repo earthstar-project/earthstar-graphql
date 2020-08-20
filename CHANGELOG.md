@@ -4,12 +4,18 @@
 
 ### Breaking
 
-- The `format` arg on the `syncWithPub` mutation has been removed as whether a pub is a GraphQL or REST pub is now automatically determined.
+- The `format` arg on the `syncWithPub` mutation has been removed, as whether a pub is a GraphQL or REST pub is now automatically determined.
 
 ### Features
 
-- Added a `isGraphQlPub` export which can be used to determine whether the pub at a URL is a GraphQL pub or not.
+- Added a `isGraphQlPub` function export which can be used to determine whether the pub at a URL is a GraphQL pub or not.
+- Added a optional `deletedAfter` arg to the `set` mutation so that ephemeral documents can be created
 - If the workspace passed to a `syncWithPub` mutation does not exist, `syncWithPub` will create it if it passes the configurable `canAddWorkspace` check.
+
+### Internal
+
+- earthstar dependency updated to 5.2.3
+- earthstar moved into peer dependencies, as clients which may also depend on the earthstar package should use the same version.
 
 ## 4.2.0
 

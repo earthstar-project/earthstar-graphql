@@ -142,9 +142,8 @@ export default async function syncGraphql(
   }
 
   const pulledDocuments: Document[] = pullJson.data.workspace.documents.map(
-    ({ author, workspace, deleteAfter, ...rest }) => ({
+    ({ author, workspace, ...rest }) => ({
       ...rest,
-      ...(deleteAfter ? { deleteAfter } : {}),
       author: author.address,
       workspace: workspace.address,
     })
@@ -212,9 +211,6 @@ export default async function syncGraphql(
         document: {
           ...doc.document,
           author: doc.document.author.address,
-          deleteAfter: doc.document.deleteAfter
-            ? doc.document.deleteAfter
-            : undefined,
           workspace: doc.document.workspace.address,
         },
         result:
@@ -238,7 +234,7 @@ export async function isGraphQlPub(pubUrl: string): Promise<boolean> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       query: /* GraphQL */ `
-        {
+        query isGqlQuery {
           __schema {
             queryType {
               name

@@ -86,6 +86,7 @@ export const setField: GraphQLFieldConfig<{}, Context> = {
       format: args.document.format || "es.4",
       content: args.document.content,
       path: args.document.path,
+      deleteAfter: args.document.deleteAfter,
     });
 
     if (isErr(setResult)) {

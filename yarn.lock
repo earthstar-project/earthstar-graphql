@@ -3344,10 +3344,10 @@ dynamic-dedupe@^0.3.0:
   dependencies:
     xtend "^4.0.0"
 
-earthstar@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/earthstar/-/earthstar-5.0.0.tgz#67f0eba96517dc43bc460b8388226e6750cd98a8"
-  integrity sha512-ro8+AxhyIhw8lKDsupPB0SpNvDadUtLrOaPycqNoU+sWUsWL2CiWB+xCtt5KkW01PvlAhgCDxCD4byrBZs2FnQ==
+earthstar@5.2.3:
+  version "5.2.3"
+  resolved "https://registry.yarnpkg.com/earthstar/-/earthstar-5.2.3.tgz#29202f5b1e5b833c054ac889a6ea9ec65189e93a"
+  integrity sha512-V9y1NLlbiMCshpXBwPJqjwWLvn2f5h9P2nfQxU6zjL4DtQ3549LNzi2EM+gw/X07ex4pj0D6ARzI6KT79mx0sA==
   dependencies:
     "@types/isomorphic-fetch" "0.0.35"
     bencode "^2.0.1"
@@ -6340,9 +6340,9 @@ ms@^2.1.1:
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
 msw@^0.20.1:
-  version "0.20.1"
-  resolved "https://registry.yarnpkg.com/msw/-/msw-0.20.1.tgz#34804ab934905b54a2c5189d360c44faf6801945"
-  integrity sha512-mrQb4LFmZ6KrADb1Hl2T4yQhxwCkhDz/HRRRLl+RgguUBJ+8aqDtXxGo23Eagw+Q4zrWIyJ//fENv4H6GBeTig==
+  version "0.20.5"
+  resolved "https://registry.yarnpkg.com/msw/-/msw-0.20.5.tgz#b6141080c0d8b17c451d9ca36c28cc47b4ac487a"
+  integrity sha512-hmEsey5BbVicMGt7aOh/GZ9ltga5N3tK6NiJXnbfCkAGKgnAVnjASr3i7Z+sWlZyY5uuMUFyLCEcqrlXxC6qIA==
   dependencies:
     "@open-draft/until" "^1.0.3"
     "@types/cookie" "^0.4.0"
@@ -6352,7 +6352,7 @@ msw@^0.20.1:
     headers-utils "^1.2.0"
     node-fetch "^2.6.0"
     node-match-path "^0.4.4"
-    node-request-interceptor "^0.3.3"
+    node-request-interceptor "^0.3.5"
     statuses "^2.0.0"
     yargs "^15.4.1"
 
@@ -6486,10 +6486,10 @@ node-releases@^1.1.58:
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-1.1.60.tgz#6948bdfce8286f0b5d0e5a88e8384e954dfe7084"
   integrity sha512-gsO4vjEdQaTusZAEebUWp2a5d7dF5DYoIpDG7WySnk7BuZDW+GPpHXoXXuYawRBr/9t5q54tirPz79kFIWg4dA==
 
-node-request-interceptor@^0.3.3:
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/node-request-interceptor/-/node-request-interceptor-0.3.3.tgz#4227763d1d8d696fc15f7d6e1fe0ed1dd8c9d86d"
-  integrity sha512-NLFD4F7sB72WSVI7YYQzaRa7PkhdbXL1cPNvu2LlGkmnLbE11EEKrRmie5gDOKy3xfk22xXPk654CbiFwaBLdA==
+node-request-interceptor@^0.3.5:
+  version "0.3.6"
+  resolved "https://registry.yarnpkg.com/node-request-interceptor/-/node-request-interceptor-0.3.6.tgz#c411065a424b17a17503ecfce11a6a2a2f5d9a87"
+  integrity sha512-pN8Tt43XuLamN+bspAZ9tEMGDp1bOfaxluYop1/qmNRQmM5BOelFqr4jRvARD6y/7iuhLjOEjMQgy5HweXN7Kg==
   dependencies:
     "@open-draft/until" "^1.0.3"
     debug "^4.1.1"

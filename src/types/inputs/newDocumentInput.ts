@@ -1,4 +1,9 @@
-import { GraphQLInputObjectType, GraphQLNonNull, GraphQLString } from "graphql";
+import {
+  GraphQLInputObjectType,
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLFloat,
+} from "graphql";
 import { documentFormatEnum } from "../object-types/document";
 
 export default new GraphQLInputObjectType({
@@ -16,6 +21,12 @@ export default new GraphQLInputObjectType({
     path: {
       type: GraphQLNonNull(GraphQLString),
       description: "The path of the document, e.g. /spices/pepper",
+    },
+    deleteAfter: {
+      type: GraphQLFloat,
+      description:
+        "A timestamp representing the time this document should be deleted by",
+      defaultValue: null,
     },
   },
 });

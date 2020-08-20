@@ -3,6 +3,7 @@ import createSchemaContext from "./create-schema-context";
 import { generateAuthorKeypair, sign, verify, AuthorKeypair } from "earthstar";
 import { DeletedDocumentsQuery } from "./__generated__/deleted-documents-query";
 import { LongNameQuery } from "./__generated__/long-name-query";
+import { TestMutation } from "./__generated__/test-mutation";
 
 export const TEST_WORKSPACE_ADDR = "+test.a123";
 
@@ -35,9 +36,15 @@ describe("query", () => {
       workspaceAddresses: [TEST_WORKSPACE_ADDR],
     });
 
+    const DELETE_AFTER = Date.now() * 1000 + 10000000;
+
     const variables = {
       author: generateAuthorKeypair("test"),
-      document: { path: "/testing", content: "is fun!" },
+      document: {
+        path: "/!testing",
+        content: "is fun!",
+        deleteAfter: DELETE_AFTER,
+      },
       workspace: TEST_WORKSPACE_ADDR,
     };
 
@@ -48,10 +55,17 @@ describe("query", () => {
         $workspace: String!
       ) {
         set(author: $author, document: $document, workspace: $workspace) {
+          __typename
+          ... on DocumentRejectedError {
+            errorName
+            reason
+          }
           ... on SetDataSuccessResult {
             document {
               ... on ES4Document {
                 content
+                path
+                deleteAfter
               }
             }
           }
@@ -59,9 +73,9 @@ describe("query", () => {
       }
     `;
 
-    await query(TEST_MUTATION, variables, ctx);
+    await query<TestMutation>(TEST_MUTATION, variables, ctx);
 
-    expect(ctx.workspaces[0].getDocument("/testing")?.content).toEqual(
+    expect(ctx.workspaces[0].getDocument("/!testing")?.content).toEqual(
       "is fun!"
     );
   });
