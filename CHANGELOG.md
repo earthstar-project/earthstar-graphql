@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.1.0
+
+### Features
+
+- Added a `syncMany` mutation that lets you sync many workspaces with many pubs in a single operation.
+
 ## 5.0.0
 
 ### Breaking

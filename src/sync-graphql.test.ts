@@ -4,7 +4,6 @@ import {
   ValidatorEs4,
   generateAuthorKeypair,
   sign,
-  Document,
   AuthorKeypair,
 } from "earthstar";
 import syncGraphql from "./sync-graphql";
@@ -12,12 +11,33 @@ import { createSchemaContext } from ".";
 import { Context } from "./types";
 import query from "./query";
 import { SyncMutation } from "./__generated__/sync-mutation";
+import { MultiSyncMutation } from "./__generated__/multi-sync-mutation";
 
 export const TEST_WORKSPACE_ADDR = "+test.a123";
 export const TEST_AUTHOR = generateAuthorKeypair("test") as AuthorKeypair;
 export const TEST_SYNC_MUTATION = /* GraphQL */ `
   mutation SyncMutation($workspace: String!, $pubUrl: String!) {
     syncWithPub(workspace: $workspace, pubUrl: $pubUrl) {
+      __typename
+      ... on DetailedSyncSuccess {
+        pushed {
+          ignoredCount
+          rejectedCount
+          acceptedCount
+        }
+        pulled {
+          ignoredCount
+          rejectedCount
+          acceptedCount
+        }
+      }
+    }
+  }
+`;
+
+export const TEST_MULTI_SYNC_MUTATION = /* GraphQL */ `
+  mutation MultiSyncMutation($workspaces: [SyncInput!]!) {
+    syncMany(workspaces: $workspaces) {
       __typename
       ... on DetailedSyncSuccess {
         pushed {
@@ -166,6 +186,78 @@ test("Syncs", async () => {
     rejectedCount: 0,
   });
   expect(res.data?.syncWithPub.pushed).toEqual({
+    acceptedCount: 1,
+    ignoredCount: 0,
+    rejectedCount: 0,
+  });
+
+  const storage = ctx.workspaces[0];
+
+  expect(res.data).toBeDefined();
+  expect(storage.documents().length).toBe(6);
+  expect(storage.documents().map((doc) => doc.path)).toEqual([
+    "/test/1",
+    "/test/2",
+    "/test/3",
+    "/test/4",
+    "/test/trash",
+    "/wiki/door",
+  ]);
+  expect(storage.documents({ path: "/test/4" })[0].content).toEqual(
+    "A local document"
+  );
+});
+
+test("Multi Syncs", async () => {
+  const ctx = createSchemaContext("MEMORY", {
+    workspaceAddresses: [TEST_WORKSPACE_ADDR],
+  });
+
+  await query(
+    /* GraphQL */ `
+      mutation SetMutation(
+        $author: AuthorInput!
+        $document: NewDocumentInput!
+        $workspace: String!
+      ) {
+        set(author: $author, document: $document, workspace: $workspace) {
+          __typename
+          ... on DocumentRejectedError {
+            reason
+          }
+        }
+      }
+    `,
+    {
+      author: generateAuthorKeypair("test") as AuthorKeypair,
+      document: {
+        path: "/test/4",
+        content: "A local document",
+      },
+      workspace: TEST_WORKSPACE_ADDR,
+    },
+    ctx
+  );
+
+  const res = await query<MultiSyncMutation>(
+    TEST_MULTI_SYNC_MUTATION,
+    {
+      workspaces: [
+        {
+          address: TEST_WORKSPACE_ADDR,
+          pubs: ["https://test.server/graphql"],
+        },
+      ],
+    },
+    ctx
+  );
+
+  expect(res.data?.syncMany[0].pulled).toEqual({
+    acceptedCount: 5,
+    ignoredCount: 0,
+    rejectedCount: 0,
+  });
+  expect(res.data?.syncMany[0].pushed).toEqual({
     acceptedCount: 1,
     ignoredCount: 0,
     rejectedCount: 0,

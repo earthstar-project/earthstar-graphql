@@ -14,6 +14,7 @@ export type TestMutationVariables = {
         format: ("ES4") | null;
         content: string;
         path: string;
+        deleteAfter: number | null;
     };
     workspace: string;
 };

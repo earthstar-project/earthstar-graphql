@@ -7,6 +7,7 @@ import {
   GraphQLUnionType,
 } from "graphql";
 import { documentUnionType } from "../object-types/document";
+import { workspaceType } from "../object-types/workspace";
 import documentIngestion from "../interfaces/documentIngestion";
 
 export const acceptedDocumentIngestionType = new GraphQLObjectType({
@@ -120,5 +121,65 @@ export const workspaceNotFoundErrorObject = new GraphQLObjectType({
     address: {
       type: GraphQLNonNull(GraphQLString),
     },
+  },
+});
+
+export const detailedSyncSuccessType = new GraphQLObjectType({
+  name: "DetailedSyncSuccess",
+  description: "The result of a successful sync operation, with lots of detail",
+  fields: {
+    syncedWorkspace: {
+      description: "The workspace which had documents synced from and to it",
+      type: GraphQLNonNull(workspaceType),
+    },
+    pushed: {
+      description:
+        "A detailed report of the documents which were pushed to the pub. ",
+      type: GraphQLNonNull(documentIngestionReportType),
+    },
+    pulled: {
+      description:
+        "A detailed report of the documents which were pulled from the pub",
+      type: GraphQLNonNull(documentIngestionReportType),
+    },
+  },
+});
+
+export const syncSuccessType = new GraphQLObjectType({
+  name: "SyncSuccess",
+  description: "The result of a successful sync operation.",
+  fields: {
+    syncedWorkspace: {
+      description: "The workspace which had documents synced from and to it",
+      type: GraphQLNonNull(workspaceType),
+    },
+  },
+});
+
+export const syncErrorType = new GraphQLObjectType({
+  name: "SyncError",
+  description: "The result of a failed sync",
+  fields: {
+    reason: {
+      type: GraphQLNonNull(GraphQLString),
+      description: "The reason for the error",
+      resolve(root) {
+        return root.reason;
+      },
+    },
+  },
+});
+
+export const syncWithPubResultUnion = new GraphQLUnionType({
+  name: "SyncWithPubResult",
+  description: "The result of an attempted sync operation with a pub",
+  types: [
+    syncSuccessType,
+    workspaceNotFoundErrorObject,
+    syncErrorType,
+    detailedSyncSuccessType,
+  ],
+  resolveType(item) {
+    return item.__type;
   },
 });

@@ -4,6 +4,7 @@ import { Context } from "../../types";
 import { addWorkspaceField } from "./addWorkspace";
 import { syncWithPubField } from "./syncWithPub";
 import { ingestDocumentsField } from "./ingestDocuments";
+import { syncManyField } from "./syncMany";
 
 export const mutationType = new GraphQLObjectType<{}, Context>({
   name: "Mutation",
@@ -12,6 +13,7 @@ export const mutationType = new GraphQLObjectType<{}, Context>({
     set: setField,
     addWorkspace: addWorkspaceField,
     syncWithPub: syncWithPubField,
+    syncMany: syncManyField,
     ingestDocuments: ingestDocumentsField,
   }),
 });

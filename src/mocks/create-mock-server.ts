@@ -4,7 +4,10 @@ import { setupServer } from "msw/node";
 import { GraphQLError } from "graphql";
 import { Context } from "../types";
 import query from "../query";
-import { TEST_SYNC_MUTATION } from "../sync-graphql.test";
+import {
+  TEST_SYNC_MUTATION,
+  TEST_MULTI_SYNC_MUTATION,
+} from "../sync-graphql.test";
 
 function createHandlers(context: Context) {
   return [
@@ -43,7 +46,20 @@ function createHandlers(context: Context) {
 
       return res(ctx.data(data));
     }),
-    graphql.query("isGqlQuery", (req, res, ctx) => {
+    graphql.mutation("MultiSyncMutation", async (req, res, ctx) => {
+      const { data, errors } = await query(
+        TEST_MULTI_SYNC_MUTATION,
+        req.variables,
+        context
+      );
+
+      if (errors) {
+        return res(ctx.errors(errors as Partial<GraphQLError>[]));
+      }
+
+      return res(ctx.data(data));
+    }),
+    graphql.query("isGqlQuery", (_req, res, ctx) => {
       return res(
         ctx.data({
           __schema: {

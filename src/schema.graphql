@@ -274,6 +274,9 @@ type Mutation {
     pubUrl: String!
   ): SyncWithPubResult!
 
+  """Sync many workspaces with many pubs"""
+  syncMany(workspaces: [SyncInput!]!): [SyncWithPubResult!]!
+
   """Sync documents to this GraphQL server from a peer"""
   ingestDocuments(
     """The address of the workspace to push documents to, e.g. +camping.98765"""
@@ -434,6 +437,15 @@ type RejectedDocumentIngestion implements DocumentIngestion {
 
   """The document which failed to be ingested"""
   document: Document!
+}
+
+"""A description of a workspace and the pubs to sync with"""
+input SyncInput {
+  """The address of the workspace to sync"""
+  address: String!
+
+  """The pubs to sync the workspace with"""
+  pubs: [String!]!
 }
 
 """The result of an attempt to ingest many documents"""
