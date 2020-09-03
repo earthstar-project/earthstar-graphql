@@ -193,6 +193,7 @@ test("Syncs", async () => {
 
   const storage = ctx.workspaces[0];
 
+  expect(ctx.workspaces.length).toBe(1);
   expect(res.data).toBeDefined();
   expect(storage.documents().length).toBe(6);
   expect(storage.documents().map((doc) => doc.path)).toEqual([

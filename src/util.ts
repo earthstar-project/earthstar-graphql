@@ -385,7 +385,9 @@ export async function syncWorkspace(
       };
     }
 
-    ctx.workspaces.push(storageToUse);
+    if (!maybeStorage) {
+      ctx.workspaces.push(storageToUse);
+    }
 
     return {
       __type: detailedSyncSuccessType,
@@ -414,7 +416,9 @@ export async function syncWorkspace(
     };
   }
 
-  ctx.workspaces.push(storageToUse);
+  if (!maybeStorage) {
+    ctx.workspaces.push(storageToUse);
+  }
 
   return {
     __type: syncSuccessType,
