@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.1.1
+
+### Fixes
+
+- Fix a silly bug where a workspace would be duplicated every time it was synced.
+
 ## 5.1.0
 
 ### Features
