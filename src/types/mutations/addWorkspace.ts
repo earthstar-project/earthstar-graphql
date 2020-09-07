@@ -6,7 +6,7 @@ import {
   GraphQLObjectType,
 } from "graphql";
 import { Context } from "../../types";
-import { AuthorKeypair } from "earthstar";
+import { isErr } from "earthstar";
 import authorInputType from "../inputs/authorInput";
 import { workspaceType } from "../object-types/workspace";
 import { notPermittedResult } from "./common";
@@ -76,13 +76,27 @@ export const addWorkspaceField: GraphQLFieldConfig<{}, Context> = {
       };
     }
 
-    const newStorage = await initWorkspace(args.workspaceAddress, ctx);
+    try {
+      const newStorage = await initWorkspace(args.workspaceAddress, ctx);
 
-    ctx.workspaces.push(newStorage);
+      ctx.workspaces.push(newStorage);
 
-    return {
-      __type: workspaceAddedResultType,
-      workspace: newStorage,
-    };
+      return {
+        __type: workspaceAddedResultType,
+        workspace: newStorage,
+      };
+    } catch (err) {
+      if (isErr(err)) {
+        return {
+          __type: notPermittedResult,
+          reason: err.message,
+        };
+      }
+
+      return {
+        __type: notPermittedResult,
+        reason: "Something went wrong!",
+      };
+    }
   },
 };

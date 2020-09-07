@@ -427,3 +427,35 @@ test("also sends deleted posts", async () => {
 
   expect(deletedDoc?.content).toBe("");
 });
+
+test("fails gracefully", async () => {
+  const ctx = createSchemaContext("MEMORY", {
+    workspaceAddresses: [TEST_WORKSPACE_ADDR],
+  });
+
+  const res = await query<SyncMutation>(
+    TEST_SYNC_MUTATION,
+    {
+      workspace: "bad.1addr",
+      pubUrl: "https://test.server/graphql",
+    },
+    ctx
+  );
+
+  expect(res.data?.syncWithPub.__typename).toBe("SyncError");
+
+  const multiRes = await query<MultiSyncMutation>(
+    TEST_MULTI_SYNC_MUTATION,
+    {
+      workspaces: [
+        {
+          address: "wrong.2addr",
+          pubs: ["https://test.server/graphql"],
+        },
+      ],
+    },
+    ctx
+  );
+
+  expect(multiRes.data?.syncMany[0].__typename).toBe("SyncError");
+});

@@ -2,6 +2,10 @@
 
 ## next
 
+### Features
+
+- When a workspace with an invalid address is created during the `addWorkspace`, `syncWithPub`, or `syncMany` mutations, the error will be gracefully caught and made part of the expected GraphQL response.
+
 ### Fixes
 
 - Fixes an issue where no value could be passed to a non-nullable filed when syncing.

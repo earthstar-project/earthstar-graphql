@@ -369,14 +369,46 @@ export async function syncWorkspace(
     };
   }
 
-  const storageToUse = maybeStorage
-    ? maybeStorage
-    : await initWorkspace(address, ctx);
+  try {
+    const storageToUse = maybeStorage
+      ? maybeStorage
+      : await initWorkspace(address, ctx);
 
-  const shouldUseGraphqlSync = await isGraphQlPub(pubUrl);
+    const shouldUseGraphqlSync = await isGraphQlPub(pubUrl);
 
-  if (shouldUseGraphqlSync) {
-    const result = await syncGraphql(storageToUse, pubUrl, ctx.syncFilters);
+    if (shouldUseGraphqlSync) {
+      const result = await syncGraphql(storageToUse, pubUrl, ctx.syncFilters);
+
+      if (isErr(result)) {
+        return {
+          __type: syncErrorType,
+          reason: result.message,
+        };
+      }
+
+      if (!maybeStorage) {
+        ctx.workspaces.push(storageToUse);
+      }
+
+      return {
+        __type: detailedSyncSuccessType,
+        syncedWorkspace: storageToUse,
+        pushed: {
+          ...result.pushed,
+          documents: result.pushed.documents.map((doc) => ({
+            ...doc,
+            __type:
+              doc.result === "REJECTED"
+                ? rejectedDocumentIngestionType
+                : doc.result === "ACCEPTED"
+                ? acceptedDocumentIngestionType
+                : ignoredDocumentIngestionType,
+          })),
+        },
+        pulled: result.pulled,
+      };
+    }
+    const result = await syncLocalAndHttp(storageToUse, pubUrl);
 
     if (isErr(result)) {
       return {
@@ -390,38 +422,20 @@ export async function syncWorkspace(
     }
 
     return {
-      __type: detailedSyncSuccessType,
+      __type: syncSuccessType,
       syncedWorkspace: storageToUse,
-      pushed: {
-        ...result.pushed,
-        documents: result.pushed.documents.map((doc) => ({
-          ...doc,
-          __type:
-            doc.result === "REJECTED"
-              ? rejectedDocumentIngestionType
-              : doc.result === "ACCEPTED"
-              ? acceptedDocumentIngestionType
-              : ignoredDocumentIngestionType,
-        })),
-      },
-      pulled: result.pulled,
     };
-  }
-  const result = await syncLocalAndHttp(storageToUse, pubUrl);
+  } catch (err) {
+    if (isErr(err)) {
+      return {
+        __type: syncErrorType,
+        reason: err.message,
+      };
+    }
 
-  if (isErr(result)) {
     return {
       __type: syncErrorType,
-      reason: result.message,
+      reason: "Something went wrong!",
     };
   }
-
-  if (!maybeStorage) {
-    ctx.workspaces.push(storageToUse);
-  }
-
-  return {
-    __type: syncSuccessType,
-    syncedWorkspace: storageToUse,
-  };
 }
