@@ -391,7 +391,7 @@ export async function syncWorkspace(
 
     return {
       __type: detailedSyncSuccessType,
-      syncedWorkspace: maybeStorage,
+      syncedWorkspace: storageToUse,
       pushed: {
         ...result.pushed,
         documents: result.pushed.documents.map((doc) => ({

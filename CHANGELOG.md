@@ -1,5 +1,11 @@
 # Changelog
 
+## next
+
+### Fixes
+
+- Fixes an issue where no value could be passed to a non-nullable filed when syncing.
+
 ## 5.1.1
 
 ### Fixes
