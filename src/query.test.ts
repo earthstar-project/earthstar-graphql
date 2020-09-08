@@ -159,6 +159,73 @@ describe("query", () => {
   });
 });
 
+test("Can remove a workspace with a mutation query", async () => {
+  const ctx = createSchemaContext("MEMORY", {
+    workspaceAddresses: [TEST_WORKSPACE_ADDR],
+  });
+
+  const variables = {
+    workspaceAddress: TEST_WORKSPACE_ADDR,
+    author: null,
+  };
+
+  const REMOVE_MUTATION = /* GraphQL */ `
+    mutation RemoveMutation($workspaceAddress: String!, $author: AuthorInput) {
+      removeWorkspace(workspaceAddress: $workspaceAddress, author: $author) {
+        __typename
+        ... on WorkspaceRemovedResult {
+          address
+        }
+      }
+    }
+  `;
+
+  await query(REMOVE_MUTATION, variables, ctx);
+
+  expect(ctx.workspaces.length).toBe(0);
+
+  const permittedKeypair = generateAuthorKeypair("test") as AuthorKeypair;
+  const PERMITTED_WORKSPACE_ADDR = "+protected.a123";
+  const message = sign(permittedKeypair, "canRemoveWorkspace") as string;
+
+  const restrictedCtx = createSchemaContext("MEMORY", {
+    workspaceAddresses: [PERMITTED_WORKSPACE_ADDR],
+    canRemoveWorkspace: (address, keypair) => {
+      if (
+        address === PERMITTED_WORKSPACE_ADDR &&
+        keypair &&
+        verify(keypair.address, message, "canRemoveWorkspace")
+      ) {
+        return true;
+      }
+
+      return false;
+    },
+  });
+
+  const badAuthorVars = {
+    workspaceAddress: PERMITTED_WORKSPACE_ADDR,
+    author: generateAuthorKeypair("nope"),
+  };
+  const validVars = {
+    workspaceAddress: PERMITTED_WORKSPACE_ADDR,
+    author: permittedKeypair,
+  };
+
+  const notPermittedRes = await query(
+    REMOVE_MUTATION,
+    badAuthorVars,
+    restrictedCtx
+  );
+  expect(notPermittedRes.data?.removeWorkspace.__typename).toEqual(
+    "NotPermittedResult"
+  );
+
+  await query(REMOVE_MUTATION, validVars, restrictedCtx);
+
+  expect(restrictedCtx.workspaces.length).toBe(0);
+});
+
 test("Does not include deleted documents by default", async () => {
   const ctx = createSchemaContext("MEMORY", {
     workspaceAddresses: [TEST_WORKSPACE_ADDR],

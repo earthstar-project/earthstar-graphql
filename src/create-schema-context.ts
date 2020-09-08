@@ -2,6 +2,7 @@ import { ValidatorEs4, StorageSqlite, StorageMemory } from "earthstar";
 import {
   Context,
   AddWorkspaceCheck,
+  RemoveWorkspaceCheck,
   SqliteContext,
   MemoryContext,
   StorageType,
@@ -13,6 +14,7 @@ export const VALIDATORS = [ValidatorEs4];
 type CommonContextOptions = {
   workspaceAddresses: string[];
   canAddWorkspace?: AddWorkspaceCheck;
+  canRemoveWorkspace?: RemoveWorkspaceCheck;
   syncFilters?: SyncFiltersArg;
 };
 
@@ -43,6 +45,9 @@ export default function createSchemaContext(
       canAddWorkspace: options.canAddWorkspace
         ? options.canAddWorkspace
         : () => true,
+      canRemoveWorkspace: options.canRemoveWorkspace
+        ? options.canRemoveWorkspace
+        : () => true,
       syncFilters: {
         ...options.syncFilters,
       },
@@ -61,6 +66,9 @@ export default function createSchemaContext(
     }),
     canAddWorkspace: options.canAddWorkspace
       ? options.canAddWorkspace
+      : () => true,
+    canRemoveWorkspace: options.canRemoveWorkspace
+      ? options.canRemoveWorkspace
       : () => true,
     getWorkspacePath: (options as SqliteContextOptions).getWorkspacePath,
     syncFilters: {

@@ -263,6 +263,17 @@ type Mutation {
     author: AuthorInput
   ): AddWorkspaceResult!
 
+  """Attempt to remove an existing workspace from the current context"""
+  removeWorkspace(
+    """The address of the workspace to remove"""
+    workspaceAddress: String!
+
+    """
+    The author wishing to remove the workspace, possibly used to authorise this operation depending on the configuration
+    """
+    author: AuthorInput
+  ): RemoveWorkspaceResult!
+
   """
   Sync one of the GraphQL server's locally stored workspaces with a pub's
   """
@@ -365,6 +376,15 @@ type NotPermittedResult {
 type WorkspaceExistsResult {
   """The existing workspace"""
   workspace: Workspace!
+}
+
+"""A possible result for removing a workspace"""
+union RemoveWorkspaceResult = WorkspaceRemovedResult | NotPermittedResult
+
+"""Describes a successful removal of a workspace"""
+type WorkspaceRemovedResult {
+  """The address of the removed workspace"""
+  address: String!
 }
 
 """The result of an attempted sync operation with a pub"""

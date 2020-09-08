@@ -7,6 +7,11 @@ export type AddWorkspaceCheck = (
   author?: AuthorKeypair
 ) => boolean;
 
+export type RemoveWorkspaceCheck = (
+  workspaceAddress: string,
+  author?: AuthorKeypair
+) => boolean;
+
 export type SyncFilters = {
   pathPrefixes: string[];
   versionsByAuthors: string[];
@@ -18,6 +23,7 @@ export type ContextBase = {
   storageMode: StorageType;
   workspaces: IStorage[];
   canAddWorkspace: AddWorkspaceCheck;
+  canRemoveWorkspace: RemoveWorkspaceCheck;
   syncFilters: SyncFiltersArg;
 };
 
