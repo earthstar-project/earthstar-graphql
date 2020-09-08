@@ -38,6 +38,15 @@ export const queryType = new GraphQLObjectType<{}, Context>({
         const { typename, localId } = decodeFromId(args.id);
 
         switch (typename) {
+          case "AuthorInWorkspace":
+            const [authorAddr, workspaceAddr] = localId.split("-");
+            const author = getAuthor(authorAddr, ctx);
+            return author
+              ? {
+                  ...author,
+                  fromWorkspace: workspaceAddr,
+                }
+              : null;
           case "Author":
             return getAuthor(localId, ctx) || null;
           case "Workspace":

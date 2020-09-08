@@ -51,6 +51,12 @@ export const authorType: GraphQLObjectType = new GraphQLObjectType<
     id: {
       type: GraphQLNonNull(GraphQLID),
       resolve(root) {
+        if (root.fromWorkspace) {
+          return encodeToId(
+            "AuthorInWorkspace",
+            `${root.address}-${root.fromWorkspace}`
+          );
+        }
         return encodeToId("Author", root.address);
       },
     },
