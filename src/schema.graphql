@@ -275,18 +275,15 @@ type Mutation {
   ): RemoveWorkspaceResult!
 
   """
-  Sync one of the GraphQL server's locally stored workspaces with a pub's
+  Sync one of the GraphQL server's locally stored workspaces with many pubs'
   """
-  syncWithPub(
+  syncWithPubs(
     """The address of the workspace to sync, e.g. +camping.98765"""
     workspace: String!
 
     """The URL of the pub to sync with"""
-    pubUrl: String!
+    pubUrls: [String!]!
   ): SyncWithPubResult!
-
-  """Sync many workspaces with many pubs"""
-  syncMany(workspaces: [SyncInput!]!): [SyncWithPubResult!]!
 
   """Sync documents to this GraphQL server from a peer"""
   ingestDocuments(
@@ -387,31 +384,35 @@ type WorkspaceRemovedResult {
   address: String!
 }
 
-"""The result of an attempted sync operation with a pub"""
-union SyncWithPubResult = SyncSuccess | WorkspaceNotFoundError | SyncError | DetailedSyncSuccess
+"""The result of an attempted sync operation with many pubs"""
+union SyncWithPubResult = SyncReport | WorkspaceNotFoundError | WorkspaceNotValidError
 
-"""The result of a successful sync operation."""
-type SyncSuccess {
-  """The workspace which had documents synced from and to it"""
+"""A report of how a workspace was synced with many pubs"""
+type SyncReport {
+  """The synced workspace"""
   syncedWorkspace: Workspace!
+  pubSyncResults: [PubSyncResult!]!
 }
 
-"""The result of a failed sync"""
-type SyncError {
-  """The reason for the error"""
-  reason: String!
-}
+"""A possible result of a sync operation with a pub"""
+union PubSyncResult = DetailedSyncSuccess | SyncSuccess | SyncError
 
 """The result of a successful sync operation, with lots of detail"""
-type DetailedSyncSuccess {
-  """The workspace which had documents synced from and to it"""
-  syncedWorkspace: Workspace!
+type DetailedSyncSuccess implements PubSyncDetails {
+  """The URL of the pub which was synced to"""
+  pubUrl: String!
 
   """A detailed report of the documents which were pushed to the pub. """
   pushed: DocumentIngestionReport!
 
   """A detailed report of the documents which were pulled from the pub"""
   pulled: DocumentIngestionReport!
+}
+
+"""Details about a pub sync"""
+interface PubSyncDetails {
+  """The URL of the pub which was synced to"""
+  pubUrl: String!
 }
 
 """A report of whether each document was ingested, ignored, or failed"""
@@ -459,13 +460,28 @@ type RejectedDocumentIngestion implements DocumentIngestion {
   document: Document!
 }
 
-"""A description of a workspace and the pubs to sync with"""
-input SyncInput {
-  """The address of the workspace to sync"""
+"""The result of a successful sync operation."""
+type SyncSuccess implements PubSyncDetails {
+  """The URL of the pub which was synced to"""
+  pubUrl: String!
+}
+
+"""The result of a failed sync"""
+type SyncError implements PubSyncDetails {
+  """The URL of the pub which was synced to"""
+  pubUrl: String!
+
+  """The reason for the error"""
+  reason: String!
+}
+
+"""An error given when an invalid workspace is specified"""
+type WorkspaceNotValidError {
+  """The address of the invalid workspace"""
   address: String!
 
-  """The pubs to sync the workspace with"""
-  pubs: [String!]!
+  """The reason for the error"""
+  reason: String!
 }
 
 """The result of an attempt to ingest many documents"""

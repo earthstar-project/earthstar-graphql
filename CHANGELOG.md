@@ -2,9 +2,13 @@
 
 ## next
 
+### Breaking
+
+- `syncWithPub` (which synced a workspace with a single pub), and `syncMany` (which synced many workspaces with many pubs) have been removed in favour of a single `syncWithPubs` mutation which syncs a single workspace with many pubs. I think this is the sweet spot.
+
 ### Features
 
-- Added a `removeWorkspace` mutation which removes a workspace with a given address from the context. It can be authorised using a  `canRemoveWorkspace` checking function provided to the schema.
+- Added a `removeWorkspace` mutation which removes a workspace with a given address from the context. It can be authorised using a `canRemoveWorkspace` checking function provided to the schema.
 - When a workspace with an invalid address is created during the `addWorkspace`, `syncWithPub`, or `syncMany` mutations, the error will be gracefully caught and made part of the expected GraphQL response.
 
 ### Fixes
