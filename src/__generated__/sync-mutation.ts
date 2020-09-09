@@ -4,6 +4,8 @@ export type SyncMutation = {
     syncWithPubs: {
         __typename: "SyncReport" | "WorkspaceNotFoundError" | "WorkspaceNotValidError";
     } & (({
+        reason: string;
+    }) | ({
         syncedWorkspace: {
             address: string;
         };

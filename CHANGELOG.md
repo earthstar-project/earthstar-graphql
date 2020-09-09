@@ -1,6 +1,6 @@
 # Changelog
 
-## next
+## 6.0.0
 
 ### Breaking
 
@@ -14,6 +14,7 @@
 ### Fixes
 
 - Fixes an issue where no value could be passed to a non-nullable filed when syncing.
+- Fixes bad values being passed to the pulled documents in a DetailedSyncSuccess
 
 ## 5.1.1
 
