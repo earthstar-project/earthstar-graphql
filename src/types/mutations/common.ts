@@ -2,12 +2,11 @@ import {
   GraphQLObjectType,
   GraphQLNonNull,
   GraphQLString,
-  GraphQLFloat,
+  GraphQLInt,
   GraphQLList,
   GraphQLUnionType,
 } from "graphql";
 import { documentUnionType } from "../object-types/document";
-import { workspaceType } from "../object-types/workspace";
 import documentIngestion from "../interfaces/documentIngestion";
 
 export const acceptedDocumentIngestionType = new GraphQLObjectType({
@@ -87,15 +86,15 @@ export const documentIngestionReportType = new GraphQLObjectType({
       description: "The results of all documents",
     },
     ignoredCount: {
-      type: GraphQLNonNull(GraphQLFloat),
+      type: GraphQLNonNull(GraphQLInt),
       description: "The number of documents which were ignored",
     },
     rejectedCount: {
-      type: GraphQLNonNull(GraphQLFloat),
+      type: GraphQLNonNull(GraphQLInt),
       description: "The number of documents which were rejected",
     },
     acceptedCount: {
-      type: GraphQLNonNull(GraphQLFloat),
+      type: GraphQLNonNull(GraphQLInt),
       description: "The number of documents which were accepted",
     },
   },

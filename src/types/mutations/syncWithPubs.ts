@@ -163,7 +163,18 @@ async function syncWithPub(storage: IStorage, pubUrl: string, ctx: Context) {
               : ignoredDocumentIngestionType,
         })),
       },
-      pulled: result.pulled,
+      pulled: {
+        ...result.pulled,
+        documents: result.pulled.documents.map((doc) => ({
+          ...doc,
+          __type:
+            doc.result === "REJECTED"
+              ? rejectedDocumentIngestionType
+              : doc.result === "ACCEPTED"
+              ? acceptedDocumentIngestionType
+              : ignoredDocumentIngestionType,
+        })),
+      },
     };
   }
 

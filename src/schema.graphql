@@ -421,13 +421,13 @@ type DocumentIngestionReport {
   documents: [DocumentIngestionResult!]!
 
   """The number of documents which were ignored"""
-  ignoredCount: Float!
+  ignoredCount: Int!
 
   """The number of documents which were rejected"""
-  rejectedCount: Float!
+  rejectedCount: Int!
 
   """The number of documents which were accepted"""
-  acceptedCount: Float!
+  acceptedCount: Int!
 }
 
 """Describes the result of attempting to ingest this document"""
