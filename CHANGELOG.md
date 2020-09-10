@@ -1,5 +1,11 @@
 # Changelog
 
+## next
+
+### Features
+
+- Added a `isPub` option that can be provided when creating a context, which makes selections of the root `authors`, `documents`, and `workspaces` fields return empty arrays.
+
 ## 6.0.0
 
 ### Breaking

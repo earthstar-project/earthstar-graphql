@@ -24,6 +24,7 @@ export type ContextBase = {
   workspaces: IStorage[];
   canAddWorkspace: AddWorkspaceCheck;
   canRemoveWorkspace: RemoveWorkspaceCheck;
+  isPub: boolean;
   syncFilters: SyncFiltersArg;
 };
 

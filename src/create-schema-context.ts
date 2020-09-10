@@ -16,6 +16,7 @@ type CommonContextOptions = {
   canAddWorkspace?: AddWorkspaceCheck;
   canRemoveWorkspace?: RemoveWorkspaceCheck;
   syncFilters?: SyncFiltersArg;
+  isPub?: boolean;
 };
 
 type SqliteContextOptions = {
@@ -48,6 +49,7 @@ export default function createSchemaContext(
       canRemoveWorkspace: options.canRemoveWorkspace
         ? options.canRemoveWorkspace
         : () => true,
+      isPub: options.isPub || false,
       syncFilters: {
         ...options.syncFilters,
       },
@@ -71,6 +73,7 @@ export default function createSchemaContext(
       ? options.canRemoveWorkspace
       : () => true,
     getWorkspacePath: (options as SqliteContextOptions).getWorkspacePath,
+    isPub: options.isPub || false,
     syncFilters: {
       ...options.syncFilters,
     },

@@ -87,6 +87,10 @@ export const queryType = new GraphQLObjectType<{}, Context>({
         },
       },
       resolve(_root, args, ctx) {
+        if (ctx.isPub) {
+          return [];
+        }
+
         const authors = getAllAuthors(ctx);
         return sortAuthors(authors, ctx, args.sortedBy);
       },
@@ -126,6 +130,10 @@ export const queryType = new GraphQLObjectType<{}, Context>({
         },
       },
       resolve(_root, args, ctx) {
+        if (ctx.isPub) {
+          return [];
+        }
+
         const docs = getAllDocuments(ctx, {
           filters: {
             pathPrefixes: args.pathPrefixes,
@@ -157,6 +165,10 @@ export const queryType = new GraphQLObjectType<{}, Context>({
         },
       },
       resolve(_root, args, ctx) {
+        if (ctx.isPub) {
+          return [];
+        }
+
         return sortWorkspaces(ctx.workspaces, args.sortedBy);
       },
     },

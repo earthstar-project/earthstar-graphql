@@ -80,6 +80,76 @@ describe("query", () => {
     );
   });
 
+  test("Obscures workspaces, pubs and authors when isPub is true", async () => {
+    const ctx = createSchemaContext("MEMORY", {
+      workspaceAddresses: [TEST_WORKSPACE_ADDR],
+      isPub: true,
+    });
+
+    const DELETE_AFTER = Date.now() * 1000 + 10000000;
+
+    const variables = {
+      author: generateAuthorKeypair("test"),
+      document: {
+        path: "/!testing",
+        content: "is fun!",
+        deleteAfter: DELETE_AFTER,
+      },
+      workspace: TEST_WORKSPACE_ADDR,
+    };
+
+    const TEST_MUTATION = /* GraphQL */ `
+      mutation TestMutation(
+        $author: AuthorInput!
+        $document: NewDocumentInput!
+        $workspace: String!
+      ) {
+        set(author: $author, document: $document, workspace: $workspace) {
+          __typename
+          ... on DocumentRejectedError {
+            errorName
+            reason
+          }
+          ... on SetDataSuccessResult {
+            document {
+              ... on ES4Document {
+                content
+                path
+                deleteAfter
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    await query<TestMutation>(TEST_MUTATION, variables, ctx);
+
+    const TEST_QUERY = /* GraphQL */ `
+      query TestQuery {
+        workspaces {
+          address
+        }
+        documents {
+          __typename
+        }
+        authors {
+          address
+        }
+      }
+    `;
+
+    const result = await query(TEST_QUERY, {}, ctx);
+
+    expect(result).toEqual({
+      data: {
+        workspaces: [],
+        authors: [],
+        documents: [],
+      },
+    });
+  });
+
   test("Can add a workspace with a mutation query", async () => {
     const ctx = createSchemaContext("MEMORY", {
       workspaceAddresses: [TEST_WORKSPACE_ADDR],
