@@ -1,6 +1,6 @@
 # Changelog
 
-## next
+## 6.1.0
 
 ### Features
 
