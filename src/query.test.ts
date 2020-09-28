@@ -370,7 +370,7 @@ test("returns user long names", async () => {
     .find((ws) => ws.workspace === "+names.a1")
     ?.set(TEST_AUTHOR, {
       content: "the spontaneous one",
-      path: `/about/${TEST_AUTHOR.address}/name`,
+      path: `/about/~${TEST_AUTHOR.address}/displayName.txt`,
       format: "es.4",
     });
 

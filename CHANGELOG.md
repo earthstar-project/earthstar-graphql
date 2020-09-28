@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.1.1
+
+### Fixes
+
+- Updated the path display names are taken from to one that can only be edited by the author themselves, and renamed the file too.
+
 ## 6.1.0
 
 ### Features

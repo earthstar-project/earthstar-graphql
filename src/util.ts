@@ -117,7 +117,7 @@ export function getAuthor(address: string, ctx: Context) {
 }
 
 export function getDisplayNamePath(addr: string) {
-  return `/about/${addr}/name`;
+  return `/about/~${addr}/displayName.txt`;
 }
 
 export function getAuthorDisplayName(address: string, workspace: IStorage) {
